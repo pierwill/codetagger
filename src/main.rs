@@ -1,35 +1,54 @@
-#![allow(dead_code)]
-#![allow(unused_variables)]
-#![allow(unused_imports)]
+// #![allow(dead_code)]
+// #![allow(unused_variables)]
+// #![allow(unused_imports)]
 
-use std::fs::File;
-use std::io::{self, BufRead};
-use std::path::Path;
+mod includes;
 
-use walkdir::WalkDir;
+use std::fs::read_to_string;
 
-const CODE_BLOCK: &str = ".. code-block::";
-const TAG: &str = ".. meta:: \n:keywords: code-example";
+const TAB_SELECTOR: &str = "tab-selector:: drivers";
+const TABS_DRIVERS: &str = "tab-drivers::";
 
 fn main() {
-    let mut files_with_code_examples: Vec<_> = vec![];
+    let filepath = "/Users/wep/repos/cloud-docs/source/troubleshoot-connection.txt";
+    let needs_tag = check_needs_tag(filepath);
 
-    for entry in WalkDir::new("../source/") {
-        let entry = entry.unwrap();
-        let entrypath = entry.clone().path();
+    println!("{filepath}, {needs_tag:?}");
+}
 
-        if let Ok(lines) = std::fs::read_to_string(entrypath) {
-            for line in lines.lines() {
-                if line.contains(CODE_BLOCK) {
-                    files_with_code_examples.push(entrypath.display());
-                    // println!("{}", entrypath.display());
-                    println!("yes");
-                    break;
-                }
+fn check_needs_tag(path: &str) -> bool {
+    if contains_directive(path) || contains_code_include(path) {
+        return true;
+    }
+    false
+}
 
-                // insert the tag
+fn contains_directive(path: &str) -> bool {
+    let lines = read_lines(path);
+    for line in lines {
+        if line.contains(TABS_DRIVERS) || line.contains(TAB_SELECTOR) {
+            return true;
+        }
+    }
+    false
+}
+
+fn contains_code_include(path: &str) -> bool {
+    let lines = read_lines(path);
+    for line in lines.iter() {
+        for include in includes::INCLUDES.iter() {
+            if line.contains(include) {
+                return true;
             }
         }
     }
-    println!("{:?}", files_with_code_examples);
+    false
+}
+
+fn read_lines(filename: &str) -> Vec<String> {
+    read_to_string(filename)
+        .unwrap() // panic on possible file-reading errors
+        .lines() // split the string into an iterator of string slices
+        .map(String::from) // make each slice into a string
+        .collect() // gather them together into a vector
 }

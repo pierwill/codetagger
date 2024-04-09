@@ -5,7 +5,10 @@
 mod includes;
 
 use std::fs::read_to_string;
+use std::fs::{self, OpenOptions};
+use std::io::{self, prelude::*};
 
+use regex::Regex;
 use walkdir::WalkDir;
 
 const TAB_SELECTOR: &str = "tab-selector:: drivers";
@@ -77,4 +80,24 @@ fn read_lines(filename: &str) -> Vec<String> {
         .lines() // split the string into an iterator of string slices
         .map(String::from) // make each slice into a string
         .collect() // gather them together into a vector
+}
+
+// Add a facet directive with a programmingLanguage attribute with values that correspond to all code samples on the page.
+// ```
+// .. facet::
+// :name: programmingLanguage
+// :values: shell, csharp, javascript/typescript
+// ```
+fn add_facet() {}
+
+// Each programming language used on the page
+// ```
+// .. meta::
+// :keywords: code example, node.js
+// ```
+fn add_meta_keyword(path: &str) {
+    let re = Regex::new(r".. meta::(.*)\n(.*):keywords:(.*)").unwrap();
+    let contents = fs::read_to_string(path).expect("oops");
+    let r = re.find(&contents);
+    println!("{:?}", r);
 }

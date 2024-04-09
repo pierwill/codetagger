@@ -1,26 +1,33 @@
-#![allow(dead_code)]
-#![allow(unused_variables)]
-#![allow(unused_imports)]
+use std::fs::read_to_string;
+
+use clap::ArgAction;
+use clap::Parser;
+use regex::Regex;
+use walkdir::WalkDir;
 
 mod includes;
 
-use std::fmt::format;
-use std::fs::read_to_string;
-use std::fs::*;
-use std::fs::{self, OpenOptions};
-use std::io::{self, prelude::*};
-use std::iter::once_with;
-
-use regex::Regex;
-use walkdir::WalkDir;
+#[derive(Parser, Debug)]
+#[command(version, about, long_about = None)]
+struct Args {
+    #[clap(long, short,
+           default_missing_value("true"), default_value("true"), num_args(0..=1),
+           require_equals(true), action = ArgAction::Set)]
+    dryrun: bool,
+    #[arg(short, long)]
+    repo: String,
+}
 
 const TAB_SELECTOR: &str = "tab-selector:: drivers";
 const TABS_DRIVERS: &str = "tab-drivers::";
 
 fn main() {
+    let args = Args::parse();
+
     let mut files_needing_tag: Vec<String> = vec![];
 
-    for entry in WalkDir::new("/Users/wep/repos/cloud-docs/source") {
+    // identify files needing tags
+    for entry in WalkDir::new(args.repo) {
         let entry = entry.unwrap();
         let entry_path = entry.path();
         if entry_path.is_dir() {
@@ -32,15 +39,16 @@ fn main() {
             files_needing_tag.push(filepath.clone());
         }
     }
-
     println!("these files need some kind of tags: {files_needing_tag:#?}");
+
+    // Add `code example` to meta keywords
     for file in files_needing_tag {
         let meta_keywords = get_meta_keywords(&file);
         if meta_keywords.is_some() && meta_keywords.unwrap().contains("code example") {
-            println!("{file} has code example in meta keywords");
+            // File has already has `code example` in meta keywords
             continue;
         } else {
-            add_meta_keyword(&file)
+            add_meta_keyword(&file, args.dryrun)
         }
     }
 }
@@ -80,29 +88,18 @@ fn read_lines(filename: &str) -> Vec<String> {
         .collect() // gather them together into a vector
 }
 
-// Add a facet directive with a programmingLanguage attribute with values that correspond to all code samples on the page.
-// ```
-// .. facet::
-// :name: programmingLanguage
-// :values: shell, csharp, javascript/typescript
-// ```
-fn add_facet() {}
+fn add_meta_keyword(path: &str, dry: bool) {
+    let contents = read_to_string(path).expect("oops");
 
-// Each programming language used on the page
-// ```
-// .. meta::
-// :keywords: code example, node.js
-// ```
-fn add_meta_keyword(path: &str) {
-    let contents = fs::read_to_string(path).expect("oops");
-
-    let re = Regex::new(r".. meta::(.*)\n(.*):keywords:(.*)").unwrap();
+    let re = Regex::new(r".. meta::(.*)\n(.*)\n(.*):keywords:(.*)").unwrap();
     let r = re.find(&contents);
 
     if r.is_some() {
         let rmatch = r.unwrap().as_str();
         let newstring = String::from(format!("{}{}", rmatch, ", code example"));
         let newcontents: String = re.replace(&contents, newstring).to_string();
-        fs::write(path, newcontents).expect("Unable to write file");
+        if !dry {
+            std::fs::write(path, newcontents).expect("Unable to write file");
+        }
     }
 }

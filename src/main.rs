@@ -1,19 +1,28 @@
-// #![allow(dead_code)]
-// #![allow(unused_variables)]
-// #![allow(unused_imports)]
+#![allow(dead_code)]
+#![allow(unused_variables)]
+#![allow(unused_imports)]
 
 mod includes;
 
 use std::fs::read_to_string;
 
+use walkdir::WalkDir;
+
 const TAB_SELECTOR: &str = "tab-selector:: drivers";
 const TABS_DRIVERS: &str = "tab-drivers::";
 
 fn main() {
-    let filepath = "/Users/wep/repos/cloud-docs/source/troubleshoot-connection.txt";
-    let needs_tag = check_needs_tag(filepath);
+    // for entry in WalkDir::new("/Users/wep/repos/cloud-docs/source") {
+    //     let filepath: &str = entry.unwrap().file_name();
+    //     let needs_tag = check_needs_tag(filepath);
+    //     println!("{filepath}, {needs_tag:?}");
+    // }
 
-    println!("{filepath}, {needs_tag:?}");
+    let filepath: &str = "/Users/wep/repos/cloud-docs/source/troubleshoot-connection.txt";
+    let needs_tag = check_needs_tag(filepath);
+    if needs_tag {
+        println!("{filepath}, needs_tag");
+    }
 }
 
 fn check_needs_tag(path: &str) -> bool {

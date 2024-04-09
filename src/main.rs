@@ -12,16 +12,23 @@ const TAB_SELECTOR: &str = "tab-selector:: drivers";
 const TABS_DRIVERS: &str = "tab-drivers::";
 
 fn main() {
-    // for entry in WalkDir::new("/Users/wep/repos/cloud-docs/source") {
-    //     let filepath: &str = entry.unwrap().file_name();
-    //     let needs_tag = check_needs_tag(filepath);
-    //     println!("{filepath}, {needs_tag:?}");
-    // }
+    for entry in WalkDir::new("/Users/wep/repos/cloud-docs/source") {
+        let entry = entry.unwrap();
+        let entry_path = entry.path();
+        if entry_path.is_dir() {
+            continue;
+        }
+        let filepath = String::from(entry_path.to_string_lossy());
 
-    let filepath: &str = "/Users/wep/repos/cloud-docs/source/troubleshoot-connection.txt";
-    let needs_tag = check_needs_tag(filepath);
-    if needs_tag {
-        println!("{filepath}, needs_tag");
+        let needs_tag = check_needs_tag(&filepath);
+        if needs_tag {
+            println!("{filepath} needs tag");
+        }
+
+        let meta_keywords = get_meta_keywords(&filepath);
+        if meta_keywords.is_some() && meta_keywords.unwrap().contains("code example") {
+            println!("{filepath} has code example in meta keywords");
+        }
     }
 }
 
@@ -54,9 +61,19 @@ fn contains_code_include(path: &str) -> bool {
     false
 }
 
+fn get_meta_keywords(path: &str) -> Option<String> {
+    let lines = read_lines(path);
+    for line in lines.iter() {
+        if line.contains(":keywords: ") {
+            return Some(line.to_string());
+        }
+    }
+    None
+}
+
 fn read_lines(filename: &str) -> Vec<String> {
     read_to_string(filename)
-        .unwrap() // panic on possible file-reading errors
+        .unwrap_or_default() // panic on possible file-reading errors
         .lines() // split the string into an iterator of string slices
         .map(String::from) // make each slice into a string
         .collect() // gather them together into a vector

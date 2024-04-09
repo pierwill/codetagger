@@ -91,7 +91,7 @@ fn read_lines(filename: &str) -> Vec<String> {
 fn add_meta_keyword(path: &str, dry: bool) {
     let contents = read_to_string(path).expect("oops");
 
-    let re = Regex::new(r".. meta::(.*)\n(.*)\n(.*):keywords:(.*)").unwrap();
+    let re = Regex::new(r"(.*):keywords:(.*)").unwrap();
     let r = re.find(&contents);
 
     if r.is_some() {

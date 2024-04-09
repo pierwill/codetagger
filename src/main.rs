@@ -40,32 +40,20 @@ fn main() {
 }
 
 fn check_needs_tag(path: &str) -> bool {
-    if contains_directive(path) || contains_code_include(path) {
-        return true;
-    }
-    false
-}
-
-fn contains_directive(path: &str) -> bool {
     let lines = read_lines(path);
+    let mut needs_tag = false;
+
     for line in lines {
         if line.contains(TABS_DRIVERS) || line.contains(TAB_SELECTOR) {
-            return true;
+            needs_tag = true;
         }
-    }
-    false
-}
-
-fn contains_code_include(path: &str) -> bool {
-    let lines = read_lines(path);
-    for line in lines.iter() {
         for include in includes::INCLUDES.iter() {
             if line.contains(include) {
-                return true;
+                needs_tag = true;
             }
         }
     }
-    false
+    needs_tag
 }
 
 fn get_meta_keywords(path: &str) -> Option<String> {

@@ -4,9 +4,12 @@
 
 mod includes;
 
+use std::fmt::format;
 use std::fs::read_to_string;
+use std::fs::*;
 use std::fs::{self, OpenOptions};
 use std::io::{self, prelude::*};
+use std::iter::once_with;
 
 use regex::Regex;
 use walkdir::WalkDir;
@@ -35,6 +38,9 @@ fn main() {
         let meta_keywords = get_meta_keywords(&file);
         if meta_keywords.is_some() && meta_keywords.unwrap().contains("code example") {
             println!("{file} has code example in meta keywords");
+            continue;
+        } else {
+            add_meta_keyword(&file)
         }
     }
 }
@@ -88,8 +94,15 @@ fn add_facet() {}
 // :keywords: code example, node.js
 // ```
 fn add_meta_keyword(path: &str) {
-    let re = Regex::new(r".. meta::(.*)\n(.*):keywords:(.*)").unwrap();
     let contents = fs::read_to_string(path).expect("oops");
+
+    let re = Regex::new(r".. meta::(.*)\n(.*):keywords:(.*)").unwrap();
     let r = re.find(&contents);
-    println!("{:?}", r);
+
+    if r.is_some() {
+        let rmatch = r.unwrap().as_str();
+        let newstring = String::from(format!("{}{}", rmatch, ", code example"));
+        let newcontents: String = re.replace(&contents, newstring).to_string();
+        fs::write(path, newcontents).expect("Unable to write file");
+    }
 }

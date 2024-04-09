@@ -15,6 +15,8 @@ const TAB_SELECTOR: &str = "tab-selector:: drivers";
 const TABS_DRIVERS: &str = "tab-drivers::";
 
 fn main() {
+    let mut files_needing_tag: Vec<String> = vec![];
+
     for entry in WalkDir::new("/Users/wep/repos/cloud-docs/source") {
         let entry = entry.unwrap();
         let entry_path = entry.path();
@@ -23,14 +25,16 @@ fn main() {
         }
         let filepath = String::from(entry_path.to_string_lossy());
 
-        let needs_tag = check_needs_tag(&filepath);
-        if needs_tag {
-            println!("{filepath} needs tag");
+        if check_needs_tag(&filepath) {
+            files_needing_tag.push(filepath.clone());
         }
+    }
 
-        let meta_keywords = get_meta_keywords(&filepath);
+    println!("these files need some kind of tags: {files_needing_tag:#?}");
+    for file in files_needing_tag {
+        let meta_keywords = get_meta_keywords(&file);
         if meta_keywords.is_some() && meta_keywords.unwrap().contains("code example") {
-            println!("{filepath} has code example in meta keywords");
+            println!("{file} has code example in meta keywords");
         }
     }
 }

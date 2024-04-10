@@ -46,7 +46,7 @@ fn main() {
         if check_needs_tag(&filepath, &includesfile) {
             files_needing_tag.push(filepath.clone());
         }
-        files_needing_tag.sort()
+        files_needing_tag.sort();
     }
 
     if debug {
@@ -132,7 +132,7 @@ fn add_meta_keywords(path: &str, dryrun: bool) {
     if !dryrun {
         std::fs::write(path, contents).expect("Unable to write file");
     }
-    println!("File edited: {path}");
+    println!("✓ File edited: {path}");
 }
 
 fn read_lines(filename: &str) -> Vec<String> {

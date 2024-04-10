@@ -94,14 +94,6 @@ fn get_meta_keywords(path: &str) -> Option<String> {
     None
 }
 
-fn read_lines(filename: &str) -> Vec<String> {
-    read_to_string(filename)
-        .unwrap_or_default() // panic on possible file-reading errors
-        .lines() // split the string into an iterator of string slices
-        .map(String::from) // make each slice into a string
-        .collect() // gather them together into a vector
-}
-
 fn add_meta_keyword(path: &str, dryrun: bool) {
     let contents = read_to_string(path).expect("oops");
 
@@ -117,4 +109,12 @@ fn add_meta_keyword(path: &str, dryrun: bool) {
         }
         println!("File edited: {path}");
     }
+}
+
+fn read_lines(filename: &str) -> Vec<String> {
+    read_to_string(filename)
+        .unwrap_or_default() // panic on possible file-reading errors
+        .lines() // split the string into an iterator of string slices
+        .map(String::from) // make each slice into a string
+        .collect() // gather them together into a vector
 }

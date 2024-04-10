@@ -84,19 +84,18 @@ fn main() {
 fn check_needs_tag(path: &str, inc: &str) -> bool {
     let lines = read_lines(path);
     let includeslist = read_lines(inc);
-    let mut needs_tag = false;
 
     for line in lines {
         if line.contains(TABS_DRIVERS) || line.contains(TAB_SELECTOR) {
-            needs_tag = true;
+            return true;
         }
         for include in &includeslist {
             if line.contains(include) {
-                needs_tag = true;
+                return true;
             }
         }
     }
-    needs_tag
+    false
 }
 
 fn get_meta_keywords(path: &str) -> Option<String> {

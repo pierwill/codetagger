@@ -26,6 +26,7 @@ const TABS_DRIVERS: &str = "tabs-drivers::";
 
 fn main() {
     let args = Args::parse();
+    let debug = false;
     let dryrun = args.dryrun;
     let repo = args.repo;
     let includesfile = args.includesfile;
@@ -33,6 +34,7 @@ fn main() {
 
     // Loop through all sub directories looking
     // for files that need tagging.
+    println!("Looking for files that need tagging...");
     for entry in WalkDir::new(repo) {
         let entry = entry.unwrap();
         let entry_path = entry.path();
@@ -46,15 +48,27 @@ fn main() {
         }
     }
 
+    if debug {
+        println!("{:#?}", files_needing_tag);
+    }
+
     // For all files needing tagging,
     // add `code example` to meta keywords
+    println!("Tagging...");
     for file in files_needing_tag {
         let meta_keywords = get_meta_keywords(&file);
-        if meta_keywords.is_some() && meta_keywords.unwrap().contains("code example") {
+        let has_meta_keywords = meta_keywords.is_some();
+
+        if has_meta_keywords && meta_keywords.unwrap().contains("code example") {
             // File has already has `code example` in meta keywords
             continue;
         } else {
-            add_meta_keyword(&file, dryrun)
+            add_to_meta_keywords(&file, dryrun)
+        }
+
+        // File doesn't have any meta keywords
+        if !has_meta_keywords && !file.contains("/includes/") {
+            add_meta_keywords(&file, dryrun);
         }
     }
 
@@ -94,7 +108,7 @@ fn get_meta_keywords(path: &str) -> Option<String> {
     None
 }
 
-fn add_meta_keyword(path: &str, dryrun: bool) {
+fn add_to_meta_keywords(path: &str, dryrun: bool) {
     let contents = read_to_string(path).expect("oops");
 
     let re = Regex::new(r"(.*):keywords:(.*)").unwrap();
@@ -109,6 +123,15 @@ fn add_meta_keyword(path: &str, dryrun: bool) {
         }
         println!("File edited: {path}");
     }
+}
+
+fn add_meta_keywords(path: &str, dryrun: bool) {
+    let mut contents = read_to_string(path).expect("oops");
+    contents.insert_str(0, ".. meta::\n   :keywords: code example\n\n");
+    if !dryrun {
+        std::fs::write(path, contents).expect("Unable to write file");
+    }
+    println!("File edited: {path}");
 }
 
 fn read_lines(filename: &str) -> Vec<String> {

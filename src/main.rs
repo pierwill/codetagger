@@ -34,7 +34,7 @@ fn main() {
 
     // Loop through all sub directories looking
     // for files that need tagging.
-    println!("Looking for files that need tagging...");
+    println!("👀 Looking for files that need tagging...");
     for entry in WalkDir::new(repo) {
         let entry = entry.unwrap();
         let entry_path = entry.path();
@@ -46,6 +46,7 @@ fn main() {
         if check_needs_tag(&filepath, &includesfile) {
             files_needing_tag.push(filepath.clone());
         }
+        files_needing_tag.sort()
     }
 
     if debug {
@@ -54,10 +55,10 @@ fn main() {
 
     // For all files needing tagging,
     // add `code example` to meta keywords
-    println!("Tagging...");
+    println!("📝 Tagging...");
     for file in files_needing_tag {
-        let meta_keywords = get_meta_keywords(&file);
-        let has_meta_keywords = meta_keywords.is_some();
+        let meta_keywords: Option<String> = get_meta_keywords(&file);
+        let has_meta_keywords: bool = meta_keywords.is_some();
 
         if has_meta_keywords && meta_keywords.unwrap().contains("code example") {
             // File has already has `code example` in meta keywords
@@ -75,7 +76,7 @@ fn main() {
     if dryrun {
         println!(
             "{}",
-            White.paint("\nThis was a dry run.\nTo update files, run with `--dryrun=false`.")
+            White.paint("\n👉 This was a dry run.\nTo update files, run with `--dryrun=false`.")
         );
     }
 }
@@ -121,7 +122,7 @@ fn add_to_meta_keywords(path: &str, dryrun: bool) {
         if !dryrun {
             std::fs::write(path, newcontents).expect("Unable to write file");
         }
-        println!("File edited: {path}");
+        println!("✓ File edited: {path}");
     }
 }
 

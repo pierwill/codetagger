@@ -116,6 +116,11 @@ fn add_to_meta_keywords(path: &str, dryrun: bool) {
 
     if r.is_some() {
         let rmatch = r.unwrap().as_str();
+        // Need to convert `$` to ``$$`` otherwise strings like `$vectorSearch`
+        // disappear when we do the replacement.
+        // According to the regex crate docs, "To write a literal $ use $$"
+        // (https://docs.rs/regex/1.10.4/regex/struct.Regex.html#replacement-string-syntax).
+        let rmatch = rmatch.replace("$", "$$");
         let newstring = String::from(format!("{}{}", rmatch, ", code example"));
         let newcontents: String = re.replace(&contents, newstring).to_string();
         if !dryrun {

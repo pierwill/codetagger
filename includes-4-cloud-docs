@@ -1,4 +1,5 @@
 tabs-selector:: drivers
+tabs-selector:: drivers
 tabs-drivers::
 /includes/uri-encoding/encode.rst
 /includes/fts-tutorial/autocomplete/token-seq-analyzer-section.rst

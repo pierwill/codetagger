@@ -1,3 +1,4 @@
+tabs-selector:: drivers
 tabs-drivers::
 includes/connection-examples-by-language-rs-local.rst
 includes/connection-examples-by-language-onprem-standard-sharded.rst

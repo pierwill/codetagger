@@ -15,21 +15,20 @@ struct Args {
            default_missing_value("true"), default_value("true"), num_args(0..=1),
            require_equals(true), action = ArgAction::Set)]
     dryrun: bool,
+    /// Path to the root of the target repo.
     #[arg(short, long)]
     repo: String,
+    /// Path to a file with list of strings to search for.
     #[arg(short, long)]
-    includesfile: String,
+    stringsfile: String,
 }
-
-const TAB_SELECTOR: &str = "tabs-selector:: drivers";
-const TABS_DRIVERS: &str = "tabs-drivers::";
 
 fn main() {
     let args = Args::parse();
     let debug = false;
     let dryrun = args.dryrun;
     let repo = args.repo;
-    let includesfile = args.includesfile;
+    let stringslist = read_lines(&args.stringsfile);
     let mut files_needing_tag: Vec<String> = vec![];
 
     // Loop through all sub directories looking
@@ -43,7 +42,7 @@ fn main() {
         }
         let filepath = String::from(entry_path.to_string_lossy());
 
-        if check_needs_tag(&filepath, &includesfile) {
+        if check_needs_tag(&filepath, stringslist.clone()) {
             files_needing_tag.push(filepath.clone());
         }
         files_needing_tag.sort();
@@ -67,7 +66,8 @@ fn main() {
             add_to_meta_keywords(&file, dryrun)
         }
 
-        // File doesn't have any meta keywords
+        // File doesn't have any meta keywords.
+        // Add them! (But skip includes.)
         if !has_meta_keywords && !file.contains("/includes/") {
             add_meta_keywords(&file, dryrun);
         }
@@ -81,16 +81,12 @@ fn main() {
     }
 }
 
-fn check_needs_tag(path: &str, inc: &str) -> bool {
+fn check_needs_tag(path: &str, strings: Vec<String>) -> bool {
     let lines = read_lines(path);
-    let includeslist = read_lines(inc);
 
     for line in lines {
-        if line.contains(TABS_DRIVERS) || line.contains(TAB_SELECTOR) {
-            return true;
-        }
-        for include in &includeslist {
-            if line.contains(include) {
+        for item in &strings {
+            if line.contains(item) {
                 return true;
             }
         }
@@ -121,7 +117,7 @@ fn add_to_meta_keywords(path: &str, dryrun: bool) {
         // According to the regex crate docs, "To write a literal $ use $$"
         // (https://docs.rs/regex/1.10.4/regex/struct.Regex.html#replacement-string-syntax).
         let rmatch = rmatch.replace("$", "$$");
-        let newstring = String::from(format!("{}{}", rmatch, ", code example"));
+        let newstring = rmatch + ", code example";
         let newcontents: String = re.replace(&contents, newstring).to_string();
         if !dryrun {
             std::fs::write(path, newcontents).expect("Unable to write file");

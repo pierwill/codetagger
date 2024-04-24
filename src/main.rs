@@ -1,3 +1,4 @@
+use std::collections::BTreeMap;
 use std::fs::read_to_string;
 
 use ansi_term::Colour::White;
@@ -5,6 +6,9 @@ use clap::ArgAction;
 use clap::Parser;
 use regex::Regex;
 use walkdir::WalkDir;
+
+const CODE_TABS_STRINGS_1: &str = "tabs-selector:: drivers";
+const CODE_TABS_STRINGS_2: &str = "tabs-drivers::";
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -18,18 +22,25 @@ struct Args {
     /// Path to the root of the target repo.
     #[arg(short, long)]
     repo: String,
-    /// Path to a file with list of strings to search for.
+    /// Print information on matches.
     #[arg(short, long)]
-    stringsfile: String,
+    verbose: bool,
 }
 
 fn main() {
     let args = Args::parse();
-    let debug = false;
+    let _debug = false;
     let dryrun = args.dryrun;
     let repo = args.repo;
-    let stringslist = read_lines(&args.stringsfile);
-    let mut files_needing_tag: Vec<String> = vec![];
+
+    let mut files_needing_tag_and_reason: BTreeMap<String, Option<String>> = BTreeMap::default();
+    let mut stringlist: Vec<String> = vec![];
+    let mut includes_with_code_tabs: Vec<String> = get_includes_with_code_tabs(repo.clone());
+    stringlist.append(&mut includes_with_code_tabs);
+    stringlist.push(CODE_TABS_STRINGS_1.to_string());
+    stringlist.push(CODE_TABS_STRINGS_2.to_string());
+
+    println!("Strings to look for: {:#?}", stringlist);
 
     // Loop through all sub directories looking
     // for files that need tagging.
@@ -42,20 +53,22 @@ fn main() {
         }
         let filepath = String::from(entry_path.to_string_lossy());
 
-        if check_needs_tag(&filepath, stringslist.clone()) {
-            files_needing_tag.push(filepath.clone());
+        let (needs_tag, reason) = check_needs_tag(&filepath, stringlist.clone());
+
+        if needs_tag {
+            files_needing_tag_and_reason.insert(filepath.clone(), reason);
         }
-        files_needing_tag.sort();
+        // use indexmap?
     }
 
-    if debug {
-        println!("{:#?}", files_needing_tag);
+    if args.verbose {
+        println!("{:#?}", files_needing_tag_and_reason);
     }
 
     // For all files needing tagging,
     // add `code example` to meta keywords
     println!("📝 Tagging...");
-    for file in files_needing_tag {
+    for (file, _) in files_needing_tag_and_reason {
         let meta_keywords: Option<String> = get_meta_keywords(&file);
         let has_meta_keywords: bool = meta_keywords.is_some();
 
@@ -81,17 +94,48 @@ fn main() {
     }
 }
 
-fn check_needs_tag(path: &str, strings: Vec<String>) -> bool {
+fn get_includes_with_code_tabs(repo: String) -> Vec<String> {
+    let mut includes_with_code_tabs: Vec<String> = vec![];
+
+    for entry in WalkDir::new(repo + "source/includes") {
+        let entry = entry.unwrap();
+        let entry_path = entry.path();
+        if entry_path.is_dir() {
+            continue;
+        }
+        let filepath = String::from(entry_path.to_string_lossy());
+        let lines = read_lines(&filepath);
+
+        for line in lines {
+            if line.contains(CODE_TABS_STRINGS_1) || line.contains(CODE_TABS_STRINGS_2) {
+                includes_with_code_tabs
+                    // We only want the part of the path starting with "/includes/",
+                    // so split at "source".
+                    .push(filepath.split("source").collect::<Vec<_>>()[1].to_string());
+                break;
+            }
+        }
+    }
+    includes_with_code_tabs
+}
+
+// Returns true if it needs a tag, and the string value that matched.
+// This string is the reason we added the tag.
+fn check_needs_tag(path: &str, strings: Vec<String>) -> (bool, Option<String>) {
+    if path.contains("/includes/") {
+        return (false, None);
+    }
+
     let lines = read_lines(path);
 
     for line in lines {
         for item in &strings {
             if line.contains(item) {
-                return true;
+                return (true, Some(item.to_string()));
             }
         }
     }
-    false
+    (false, None)
 }
 
 fn get_meta_keywords(path: &str) -> Option<String> {

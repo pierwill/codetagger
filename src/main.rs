@@ -40,7 +40,9 @@ fn main() {
     stringlist.push(CODE_TABS_STRINGS_1.to_string());
     stringlist.push(CODE_TABS_STRINGS_2.to_string());
 
-    println!("Strings to look for: {:#?}", stringlist);
+    if args.verbose {
+        println!("Strings to look for: {:#?}", stringlist);
+    }
 
     // Loop through all sub directories looking
     // for files that need tagging.
@@ -62,7 +64,11 @@ fn main() {
     }
 
     if args.verbose {
-        println!("{:#?}", files_needing_tag_and_reason);
+        println!(
+            "Found {} files:\n{:#?}",
+            files_needing_tag_and_reason.len(),
+            files_needing_tag_and_reason,
+        );
     }
 
     // For all files needing tagging,
@@ -94,6 +100,8 @@ fn main() {
     }
 }
 
+// Looks through the includes/ directory to find files
+// containing code tabs.
 fn get_includes_with_code_tabs(repo: String) -> Vec<String> {
     let mut includes_with_code_tabs: Vec<String> = vec![];
 

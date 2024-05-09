@@ -119,7 +119,7 @@ fn get_includes_with_code_tabs(repo: String) -> Vec<String> {
                 includes_with_code_tabs
                     // We only want the part of the path starting with "/includes/",
                     // so split at "source".
-                    .push(filepath.split("source").collect::<Vec<_>>()[1].to_string());
+                    .push(filepath.split("/source/").collect::<Vec<_>>()[1].to_string());
                 break;
             }
         }

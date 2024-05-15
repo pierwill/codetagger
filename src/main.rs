@@ -2,37 +2,67 @@
 
 use std::collections::{BTreeMap, HashSet};
 use std::fs::read_to_string;
+use std::str::FromStr;
 
 use ansi_term::Colour::White;
 use clap::{ArgAction, Parser};
 use regex::Regex;
 use walkdir::WalkDir;
 
+const CODE_TABS_STRINGS_1: &str = "tabs-selector:: drivers";
+const CODE_TABS_STRINGS_2: &str = "tabs-drivers::";
+
+// The reason a file needs tagging.
 #[derive(Debug)]
-pub(crate) enum Reason {
+enum Reason {
     CodeExample(String),
     Languages(HashSet<Language>),
 }
 
 #[derive(Debug, PartialEq, Eq, Hash)]
-pub(crate) enum Language {
-    Go,
-    Csharp,
-    Python,
+enum Language {
     C,
-    Php,
-    Ruby,
     Cpp,
-    JavaSync,
+    Csharp,
+    Go,
     JavaAsync,
-    Scala,
-    Nodejs,
+    JavaSync,
     Kotlin,
+    Nodejs,
+    Php,
+    Python,
+    Ruby,
+    Scala,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+struct ParseLangError;
+
+impl FromStr for Language {
+    type Err = ParseLangError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "c" => Ok(Language::C),
+            "cpp" => Ok(Language::Cpp),
+            "csharp" => Ok(Language::Csharp),
+            "go" => Ok(Language::Go),
+            "java-async" => Ok(Self::JavaAsync),
+            "java-sync" => Ok(Language::JavaSync),
+            "kotlin" => Ok(Language::Kotlin),
+            "nodejs" => Ok(Language::Nodejs),
+            "php" => Ok(Language::Php),
+            "python" => Ok(Language::Python),
+            "ruby" => Ok(Language::Ruby),
+            "scala" => Ok(Language::Scala),
+            _ => Err(ParseLangError),
+        }
+    }
 }
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
-pub(crate) struct Args {
+struct Args {
     /// In order to make changes to the files,
     /// run `with --dryrun=false`.
     #[clap(long, short,
@@ -46,9 +76,6 @@ pub(crate) struct Args {
     #[arg(short, long)]
     verbose: bool,
 }
-
-const CODE_TABS_STRINGS_1: &str = "tabs-selector:: drivers";
-const CODE_TABS_STRINGS_2: &str = "tabs-drivers::";
 
 fn main() {
     let args = Args::parse();
@@ -101,7 +128,11 @@ fn main() {
     // For all files needing tagging,
     // add `code example` to meta keywords
     println!("📝 Tagging for \"code example\" ...");
-    for (file, _) in files_needing_tag_and_reason {
+    for (file, reason) in &files_needing_tag_and_reason {
+        match reason {
+            Some(Reason::CodeExample(_)) => (),
+            _ => continue,
+        }
         let meta_keywords: Option<String> = get_meta_keywords(&file);
         let has_meta_keywords: bool = meta_keywords.is_some();
 
@@ -120,6 +151,18 @@ fn main() {
         if !has_meta_keywords && !file.contains("/includes/") {
             add_meta_keywords(&file, dryrun);
         }
+    }
+
+    println!("📝 Tagging for programming language facets ...");
+    for (file, reason) in &files_needing_tag_and_reason {
+        match reason {
+            Some(Reason::Languages(_)) => (),
+            _ => continue,
+        }
+        let existing_facets: Option<String> = get_facets(&file);
+        let has_existing_facets: bool = existing_facets.is_some();
+
+        // TODO logic for adding facet
     }
 
     if dryrun {
@@ -176,35 +219,29 @@ fn check_needs_code_example_tag(path: &str, strings: Vec<String>) -> (bool, Opti
     (false, None)
 }
 
-// Returns true if the file needs a "code example" tag, and the Reason.
+// Returns true if the file needs a language facet, and the Reason.
 fn check_needs_lang_metadata(path: &str) -> (bool, Option<Reason>) {
     let lines = read_lines(path);
 
-    let mut langs: HashSet<Language> = HashSet::new();
+    let mut langs_on_page: HashSet<Language> = HashSet::new();
 
     for line in lines.iter() {
         if line.contains(CODE_TABS_STRINGS_2) {
             let tabids = get_tabids(&lines);
-            // println!("{:?}", tabids);
-            if tabids.contains(&String::from("go")) {
-                langs.insert(Language::Go);
-            }
-            if tabids.contains(&String::from("python")) {
-                langs.insert(Language::Python);
-            }
-            if tabids.contains(&String::from("csharp")) {
-                langs.insert(Language::Csharp);
-            }
-            if tabids.contains(&String::from("cpp")) {
-                langs.insert(Language::Csharp);
+            for s in tabids {
+                let lang = match Language::from_str(&s) {
+                    Ok(l) => l,
+                    Err(_) => continue,
+                };
+                langs_on_page.insert(lang);
             }
         }
     }
 
-    if langs.is_empty() {
+    if langs_on_page.is_empty() {
         return (false, None);
     } else {
-        return (true, Some(Reason::Languages(langs)));
+        return (true, Some(Reason::Languages(langs_on_page)));
     }
 }
 

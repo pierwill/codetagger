@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::BTreeSet;
 use std::fmt::Display;
 use std::str::FromStr;
 
@@ -6,7 +6,7 @@ use std::str::FromStr;
 #[derive(Debug, Clone)]
 pub enum Reason {
     CodeExample(String),
-    Languages(HashSet<Language>),
+    Languages(BTreeSet<Language>),
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Clone)]

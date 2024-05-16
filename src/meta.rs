@@ -1,6 +1,6 @@
 //! Functions for working with metadata (tags, facets, keywords) in our docs.
 
-use std::collections::HashSet;
+use std::collections::BTreeSet;
 use std::fs::read_to_string;
 use std::str::FromStr;
 
@@ -31,9 +31,14 @@ pub fn check_needs_code_example_tag(path: &str, strings: Vec<String>) -> (bool, 
 
 // Returns true if the file needs a language facet, and the Reason.
 pub fn check_needs_lang_metadata(path: &str) -> (bool, Option<Reason>) {
+    // TODO Handle includes
+    // if path.contains("/includes/") {
+    //     return (false, None);
+    // }
+
     let lines = read_lines(path);
 
-    let mut langs_on_page: HashSet<Language> = HashSet::new();
+    let mut langs_on_page: BTreeSet<Language> = BTreeSet::new();
 
     for line in lines.iter() {
         if line.contains(CODE_TABS_STRINGS_2) {
@@ -65,7 +70,7 @@ pub fn get_meta_keywords(path: &str) -> Option<String> {
     None
 }
 
-pub fn get_pl_facet_values(path: &str) -> Option<HashSet<Language>> {
+pub fn get_pl_facet_values(path: &str) -> Option<BTreeSet<Language>> {
     let contents = read_to_string(path).expect("Oops opening file");
 
     let re =
@@ -81,7 +86,7 @@ pub fn get_pl_facet_values(path: &str) -> Option<HashSet<Language>> {
         .map(|s| s.trim())
         .collect();
 
-    let mut langs: HashSet<Language> = HashSet::default();
+    let mut langs: BTreeSet<Language> = BTreeSet::default();
 
     for v in &values_str {
         let lang = match Language::from_str(&v) {

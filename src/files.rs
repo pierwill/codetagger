@@ -1,6 +1,6 @@
 //! Functions for working with files.
 
-use std::collections::HashSet;
+use std::collections::BTreeSet;
 use std::fs::read_to_string;
 
 use regex::Regex;
@@ -38,7 +38,7 @@ pub fn add_meta_keywords(path: &str, dryrun: bool) {
     println!("✓ File edited: {path}");
 }
 
-pub fn add_pl_facet(path: &str, dryrun: bool, langs: HashSet<Language>) {
+pub fn add_pl_facet(path: &str, dryrun: bool, langs: BTreeSet<Language>) {
     let mut facet = String::from(".. facet::\n   :name: programming_language\n   :values: ");
     for lang in langs {
         facet += &lang.to_string();

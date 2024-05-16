@@ -118,8 +118,8 @@ fn main() {
 
         let existing_facet_values: Option<_> = get_pl_facet_values(&file);
 
-        // TODO logic for adding facet
-        // For now, skip the case where there's already a facet
+        // TODO For now, skip the case where there's already a facet
+        // (Can we just clobber the facet? I think so!)
         if existing_facet_values.is_some() {
             continue;
         }

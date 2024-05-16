@@ -1,15 +1,16 @@
-use std::collections::{BTreeMap, HashSet};
-use std::fs::read_to_string;
-use std::str::FromStr;
+use std::collections::BTreeMap;
 
 use ansi_term::Colour::White;
 use clap::{ArgAction, Parser};
-use regex::Regex;
 use walkdir::WalkDir;
 
+mod files;
+mod meta;
 mod types;
 
-use crate::types::{Language, Reason};
+use crate::files::*;
+use crate::meta::*;
+use crate::types::Reason;
 
 const CODE_TABS_STRINGS_1: &str = "tabs-selector:: drivers";
 const CODE_TABS_STRINGS_2: &str = "tabs-drivers::";
@@ -144,7 +145,7 @@ fn get_includes_with_code_tabs(repo: String) -> Vec<String> {
     let mut includes_with_code_tabs: Vec<String> = vec![];
 
     for entry in WalkDir::new(repo + "source/includes") {
-        let entry = entry.unwrap();
+        let entry = entry.expect("Oops. Problem openning repo. Did you forget a trailing slash?");
         let entry_path = entry.path();
         if entry_path.is_dir() {
             continue;
@@ -163,158 +164,4 @@ fn get_includes_with_code_tabs(repo: String) -> Vec<String> {
         }
     }
     includes_with_code_tabs
-}
-
-// Returns true if the file needs a "code example" tag, and the Reason.
-fn check_needs_code_example_tag(path: &str, strings: Vec<String>) -> (bool, Option<Reason>) {
-    if path.contains("/includes/") {
-        return (false, None);
-    }
-
-    let lines = read_lines(path);
-
-    for line in &lines {
-        for item in &strings {
-            if line.contains(item) {
-                return (true, Some(Reason::CodeExample(item.to_string())));
-            }
-        }
-    }
-
-    (false, None)
-}
-
-// Returns true if the file needs a language facet, and the Reason.
-fn check_needs_lang_metadata(path: &str) -> (bool, Option<Reason>) {
-    let lines = read_lines(path);
-
-    let mut langs_on_page: HashSet<Language> = HashSet::new();
-
-    for line in lines.iter() {
-        if line.contains(CODE_TABS_STRINGS_2) {
-            let tabids = get_tabids(&lines);
-            for s in tabids {
-                let lang = match Language::from_str(&s) {
-                    Ok(l) => l,
-                    Err(_) => continue,
-                };
-                langs_on_page.insert(lang);
-            }
-        }
-    }
-
-    if langs_on_page.is_empty() {
-        return (false, None);
-    } else {
-        return (true, Some(Reason::Languages(langs_on_page)));
-    }
-}
-
-fn get_meta_keywords(path: &str) -> Option<String> {
-    let lines = read_lines(path);
-    for line in lines.iter() {
-        if line.contains(":keywords: ") {
-            return Some(line.to_string());
-        }
-    }
-    None
-}
-
-fn get_pl_facet_values(path: &str) -> Option<HashSet<Language>> {
-    let contents = read_to_string(path).expect("Oops opening file");
-
-    let re =
-        Regex::new(r"\.\. facet::\n(.*):name: programming_language\n.(.*):values:(.*)").unwrap();
-    let r = re.find(&contents);
-
-    if r.is_none() {
-        return None;
-    }
-
-    let values_str: Vec<_> = r.unwrap().as_str().split(":values:").collect::<Vec<_>>()[1]
-        .split(",")
-        .map(|s| s.trim())
-        .collect();
-
-    let mut langs: HashSet<Language> = HashSet::default();
-
-    for v in &values_str {
-        let lang = match Language::from_str(&v) {
-            Ok(l) => l,
-            Err(_) => continue,
-        };
-        langs.insert(lang);
-    }
-
-    // println!("{values_str:?}");
-    // println!("{langs:?}");
-    Some(langs)
-}
-
-fn get_tabids(lines: &Vec<String>) -> Vec<String> {
-    let mut tabids: Vec<String> = vec![];
-    for line in lines.iter() {
-        if line.contains(":tabid:") {
-            tabids.push(line.split(":tabid:").map(|s| s.trim()).collect::<Vec<_>>()[1].to_string());
-        }
-    }
-    tabids
-}
-
-fn add_to_meta_keywords(path: &str, dryrun: bool) {
-    let contents = read_to_string(path).expect("oops");
-
-    let re = Regex::new(r"(.*):keywords:(.*)").unwrap();
-    let r = re.find(&contents);
-
-    if r.is_some() {
-        let rmatch = r.unwrap().as_str();
-        // Need to convert `$` to ``$$`` otherwise strings like `$vectorSearch`
-        // disappear when we do the replacement.
-        // According to the regex crate docs, "To write a literal $ use $$"
-        // (https://docs.rs/regex/1.10.4/regex/struct.Regex.html#replacement-string-syntax).
-        let rmatch = rmatch.replace("$", "$$");
-        let newstring = rmatch + ", code example";
-        let newcontents: String = re.replace(&contents, newstring).to_string();
-        if !dryrun {
-            std::fs::write(path, newcontents).expect("Unable to write file");
-        }
-        println!("✓ File edited: {path}");
-    }
-}
-
-fn add_meta_keywords(path: &str, dryrun: bool) {
-    let mut contents = read_to_string(path).expect("oops");
-    contents.insert_str(0, ".. meta::\n   :keywords: code example\n\n");
-    if !dryrun {
-        std::fs::write(path, contents).expect("Unable to write file");
-    }
-    println!("✓ File edited: {path}");
-}
-
-fn add_pl_facet(path: &str, dryrun: bool, langs: HashSet<Language>) {
-    let mut facet = String::from(".. facet::\n   :name: programming_language\n   :values: ");
-    for lang in langs {
-        facet += &lang.to_string();
-        facet += ", ";
-    }
-    facet.pop(); // remove trailing whitespace
-    facet.pop(); // remove trailing comma
-    facet += "\n\n";
-
-    let mut contents = read_to_string(path).expect("oops");
-    contents.insert_str(0, &facet);
-
-    if !dryrun {
-        std::fs::write(path, contents).expect("Unable to write file");
-    }
-    println!("✓ File edited: {path}");
-}
-
-fn read_lines(filename: &str) -> Vec<String> {
-    read_to_string(filename)
-        .unwrap_or_default() // panic on possible file-reading errors
-        .lines() // split the string into an iterator of string slices
-        .map(String::from) // make each slice into a string
-        .collect() // gather them together into a vector
 }

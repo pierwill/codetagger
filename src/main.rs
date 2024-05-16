@@ -1,6 +1,5 @@
-#![allow(unused_variables, dead_code)]
-
 use std::collections::{BTreeMap, HashSet};
+use std::fmt::Display;
 use std::fs::read_to_string;
 use std::str::FromStr;
 
@@ -13,13 +12,13 @@ const CODE_TABS_STRINGS_1: &str = "tabs-selector:: drivers";
 const CODE_TABS_STRINGS_2: &str = "tabs-drivers::";
 
 // The reason a file needs tagging.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 enum Reason {
     CodeExample(String),
     Languages(HashSet<Language>),
 }
 
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Clone)]
 enum Language {
     C,
     Cpp,
@@ -27,11 +26,13 @@ enum Language {
     Go,
     JavaAsync,
     JavaSync,
+    Javascript,
     Kotlin,
     Nodejs,
     Php,
     Python,
     Ruby,
+    Rust,
     Scala,
 }
 
@@ -49,14 +50,38 @@ impl FromStr for Language {
             "go" => Ok(Language::Go),
             "java-async" => Ok(Self::JavaAsync),
             "java-sync" => Ok(Language::JavaSync),
+            "javascript/typescript" => Ok(Language::Javascript),
             "kotlin" => Ok(Language::Kotlin),
             "nodejs" => Ok(Language::Nodejs),
             "php" => Ok(Language::Php),
             "python" => Ok(Language::Python),
             "ruby" => Ok(Language::Ruby),
+            "rust" => Ok(Language::Rust),
             "scala" => Ok(Language::Scala),
             _ => Err(ParseLangError),
         }
+    }
+}
+
+impl Display for Language {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let s = match &self {
+            Language::C => "c",
+            Language::Cpp => "cpp",
+            Language::Csharp => "csharp",
+            Language::Go => "go",
+            Language::JavaAsync => "java-async",
+            Language::JavaSync => "java-sync",
+            Language::Javascript => "javascript",
+            Language::Kotlin => "kotlin",
+            Language::Nodejs => "nodejs",
+            Language::Php => "php",
+            Language::Python => "python",
+            Language::Ruby => "ruby",
+            Language::Rust => "rust",
+            Language::Scala => "scala",
+        };
+        write!(f, "{}", s)
     }
 }
 
@@ -133,6 +158,7 @@ fn main() {
             Some(Reason::CodeExample(_)) => (),
             _ => continue,
         }
+
         let meta_keywords: Option<String> = get_meta_keywords(&file);
         let has_meta_keywords: bool = meta_keywords.is_some();
 
@@ -159,10 +185,20 @@ fn main() {
             Some(Reason::Languages(_)) => (),
             _ => continue,
         }
-        let existing_facets: Option<String> = get_facets(&file);
-        let has_existing_facets: bool = existing_facets.is_some();
+
+        let existing_facet_values: Option<_> = get_pl_facet_values(&file);
 
         // TODO logic for adding facet
+        // For now, skip the case where there's already a facet
+        if existing_facet_values.is_some() {
+            continue;
+        }
+
+        let langs = match reason.clone().unwrap() {
+            Reason::CodeExample(_) => continue, // actually this case can't happen?
+            Reason::Languages(l) => l,
+        };
+        add_pl_facet(file, dryrun, langs);
     }
 
     if dryrun {
@@ -255,6 +291,37 @@ fn get_meta_keywords(path: &str) -> Option<String> {
     None
 }
 
+fn get_pl_facet_values(path: &str) -> Option<HashSet<Language>> {
+    let contents = read_to_string(path).expect("Oops opening file");
+
+    let re =
+        Regex::new(r"\.\. facet::\n(.*):name: programming_language\n.(.*):values:(.*)").unwrap();
+    let r = re.find(&contents);
+
+    if r.is_none() {
+        return None;
+    }
+
+    let values_str: Vec<_> = r.unwrap().as_str().split(":values:").collect::<Vec<_>>()[1]
+        .split(",")
+        .map(|s| s.trim())
+        .collect();
+
+    let mut langs: HashSet<Language> = HashSet::default();
+
+    for v in &values_str {
+        let lang = match Language::from_str(&v) {
+            Ok(l) => l,
+            Err(_) => continue,
+        };
+        langs.insert(lang);
+    }
+
+    // println!("{values_str:?}");
+    // println!("{langs:?}");
+    Some(langs)
+}
+
 fn get_tabids(lines: &Vec<String>) -> Vec<String> {
     let mut tabids: Vec<String> = vec![];
     for line in lines.iter() {
@@ -290,6 +357,25 @@ fn add_to_meta_keywords(path: &str, dryrun: bool) {
 fn add_meta_keywords(path: &str, dryrun: bool) {
     let mut contents = read_to_string(path).expect("oops");
     contents.insert_str(0, ".. meta::\n   :keywords: code example\n\n");
+    if !dryrun {
+        std::fs::write(path, contents).expect("Unable to write file");
+    }
+    println!("✓ File edited: {path}");
+}
+
+fn add_pl_facet(path: &str, dryrun: bool, langs: HashSet<Language>) {
+    let mut facet = String::from(".. facet::\n   :name: programming_language\n   :values: ");
+    for lang in langs {
+        facet += &lang.to_string();
+        facet += ", ";
+    }
+    facet.pop(); // remove trailing whitespace
+    facet.pop(); // remove trailing comma
+    facet += "\n\n";
+
+    let mut contents = read_to_string(path).expect("oops");
+    contents.insert_str(0, &facet);
+
     if !dryrun {
         std::fs::write(path, contents).expect("Unable to write file");
     }

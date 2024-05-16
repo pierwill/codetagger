@@ -19,7 +19,7 @@ pub fn add_to_meta_keywords(path: &str, dryrun: bool) {
         // disappear when we do the replacement.
         // According to the regex crate docs, "To write a literal $ use $$"
         // (https://docs.rs/regex/1.10.4/regex/struct.Regex.html#replacement-string-syntax).
-        let rmatch = rmatch.replace("$", "$$");
+        let rmatch = rmatch.replace('$', "$$");
         let newstring = rmatch + ", code example";
         let newcontents: String = re.replace(&contents, newstring).to_string();
         if !dryrun {

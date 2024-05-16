@@ -89,7 +89,7 @@ fn main() {
             _ => continue,
         }
 
-        let meta_keywords: Option<String> = get_meta_keywords(&file);
+        let meta_keywords: Option<String> = get_meta_keywords(file);
         let has_meta_keywords: bool = meta_keywords.is_some();
 
         if has_meta_keywords && meta_keywords.unwrap().contains("code example") {
@@ -99,13 +99,13 @@ fn main() {
             }
             continue;
         } else {
-            add_to_meta_keywords(&file, dryrun)
+            add_to_meta_keywords(file, dryrun)
         }
 
         // File doesn't have any meta keywords.
         // Add them! (But skip includes.)
         if !has_meta_keywords && !file.contains("/includes/") {
-            add_meta_keywords(&file, dryrun);
+            add_meta_keywords(file, dryrun);
         }
     }
 
@@ -116,7 +116,7 @@ fn main() {
             _ => continue,
         }
 
-        let existing_facet_values: Option<_> = get_pl_facet_values(&file);
+        let existing_facet_values: Option<_> = get_pl_facet_values(file);
 
         // TODO For now, skip the case where there's already a facet
         // (Can we just clobber the facet? I think so!)

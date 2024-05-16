@@ -54,9 +54,9 @@ pub fn check_needs_lang_metadata(path: &str) -> (bool, Option<Reason>) {
     }
 
     if langs_on_page.is_empty() {
-        return (false, None);
+        (false, None)
     } else {
-        return (true, Some(Reason::Languages(langs_on_page)));
+        (true, Some(Reason::Languages(langs_on_page)))
     }
 }
 
@@ -82,14 +82,14 @@ pub fn get_pl_facet_values(path: &str) -> Option<BTreeSet<Language>> {
     }
 
     let values_str: Vec<_> = r.unwrap().as_str().split(":values:").collect::<Vec<_>>()[1]
-        .split(",")
+        .split(',')
         .map(|s| s.trim())
         .collect();
 
     let mut langs: BTreeSet<Language> = BTreeSet::default();
 
     for v in &values_str {
-        let lang = match Language::from_str(&v) {
+        let lang = match Language::from_str(v) {
             Ok(l) => l,
             Err(_) => continue,
         };
@@ -101,7 +101,7 @@ pub fn get_pl_facet_values(path: &str) -> Option<BTreeSet<Language>> {
     Some(langs)
 }
 
-pub fn get_tabids(lines: &Vec<String>) -> Vec<String> {
+pub fn get_tabids(lines: &[String]) -> Vec<String> {
     let mut tabids: Vec<String> = vec![];
     for line in lines.iter() {
         if line.contains(":tabid:") {

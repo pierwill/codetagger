@@ -115,7 +115,7 @@ fn main() {
             if args.verbose {
                 println!("💁 {file} already has PL facet");
             }
-            continue;
+            rm_pl_facet(file, dryrun);
         }
 
         let langs = match reason.clone().unwrap() {

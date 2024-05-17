@@ -57,6 +57,22 @@ pub fn add_pl_facet(path: &str, dryrun: bool, langs: BTreeSet<Language>) {
     println!("✓ File edited: {path}");
 }
 
+pub fn rm_pl_facet(path: &str, dryrun: bool) {
+    let contents = read_to_string(path).expect("oops");
+    let re =
+        Regex::new(r"\.\. facet::(.*)\n(.*):name: programming_language\n.(.*):values:(.*)(\n*)")
+            .unwrap();
+    let r = re.find(&contents);
+
+    if r.is_some() {
+        let newstring = "\n";
+        let newcontents: String = re.replace(&contents, newstring).to_string();
+        if !dryrun {
+            std::fs::write(path, newcontents).expect("Unable to write file");
+        }
+    }
+}
+
 pub fn read_lines(filename: &str) -> Vec<String> {
     read_to_string(filename)
         .unwrap_or_default() // panic on possible file-reading errors

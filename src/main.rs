@@ -1,4 +1,5 @@
 use std::collections::BTreeMap;
+use std::collections::BTreeSet;
 
 use ansi_term::Colour::White;
 use clap::{ArgAction, Parser};
@@ -52,7 +53,7 @@ fn main() {
     // Loop through all sub directories looking
     // for files that need tagging.
     println!("👀 Looking for files that need tagging...");
-    for entry in WalkDir::new(repo) {
+    for entry in WalkDir::new(&repo) {
         let entry = entry.unwrap();
         let entry_path = entry.path();
         if entry_path.is_dir() {
@@ -83,12 +84,7 @@ fn main() {
     // For all files needing tagging,
     // add `code example` to meta keywords
     println!("📝 Tagging for \"code example\" ...");
-    for (file, reason) in &files_needing_tag_and_reason {
-        match reason {
-            Some(Reason::CodeExample(_)) => (),
-            _ => continue,
-        }
-
+    for (file, _reason) in &files_needing_tag_and_reason {
         let meta_keywords: Option<String> = get_meta_keywords(file);
         let has_meta_keywords: bool = meta_keywords.is_some();
 
@@ -111,16 +107,14 @@ fn main() {
 
     println!("📝 Tagging for programming language facets ...");
     for (file, reason) in &files_needing_tag_and_reason {
-        match reason {
-            Some(Reason::Languages(_)) => (),
-            _ => continue,
-        }
-
         let existing_facet_values: Option<_> = get_pl_facet_values(file);
 
         // TODO For now, skip the case where there's already a facet
         // (Can we just clobber the facet? I think so!)
         if existing_facet_values.is_some() {
+            if args.verbose {
+                println!("💁 {file} already has PL facet");
+            }
             continue;
         }
 
@@ -128,7 +122,21 @@ fn main() {
             Reason::CodeExample(_) => continue, // actually this case can't happen?
             Reason::Languages(l) => l,
         };
-        add_pl_facet(file, dryrun, langs);
+
+        // let mut already_edited: BTreeSet<String> = BTreeSet::default();
+        if !file.contains("/includes/") {
+            add_pl_facet(file, dryrun, langs.clone());
+            // _ = already_edited.insert(file.to_string());
+        }
+
+        // let files_that_include_this_file =
+        //     get_files_that_include_this_file(file.clone(), repo.clone(), args.verbose);
+
+        // for file in files_that_include_this_file {
+        //     if !already_edited.contains(&file) {
+        //         add_pl_facet(&file, dryrun, langs.clone());
+        //     }
+        // }
     }
 
     if dryrun {
@@ -137,6 +145,47 @@ fn main() {
             White.paint("\n👉 This was a dry run.\nTo update files, run with `--dryrun=false`.")
         );
     }
+}
+
+#[allow(dead_code)]
+fn get_files_that_include_this_file(path: String, repo: String, verbose: bool) -> BTreeSet<String> {
+    let mut files_that_include_this_file: BTreeSet<String> = BTreeSet::default();
+    let include_path = path.split("/source/").collect::<Vec<_>>()[1];
+
+    for entry in WalkDir::new(repo) {
+        let entry = entry.unwrap();
+        let entry_path = entry.path();
+        if entry_path.is_dir() {
+            continue;
+        }
+        let filepath = String::from(entry_path.to_string_lossy());
+        if !filepath.contains("/source/") {
+            continue;
+        }
+
+        let lines = read_lines(&filepath);
+        for line in lines {
+            if line.contains(include_path) {
+                _ = files_that_include_this_file.insert(filepath.clone());
+            }
+        }
+    }
+
+    if verbose {
+        println!(
+            "file {} is included by {:#?}",
+            path, files_that_include_this_file
+        );
+
+        // Log nested includes
+        for f in &files_that_include_this_file {
+            if f.contains("/includes/") {
+                println!("{} is included in an include!", f);
+            }
+        }
+    }
+
+    files_that_include_this_file
 }
 
 // Looks through the includes/ directory to find files

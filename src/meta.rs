@@ -73,8 +73,8 @@ pub fn get_meta_keywords(path: &str) -> Option<String> {
 pub fn get_pl_facet_values(path: &str) -> Option<BTreeSet<Language>> {
     let contents = read_to_string(path).expect("Oops opening file");
 
-    let re =
-        Regex::new(r"\.\. facet::\n(.*):name: programming_language\n.(.*):values:(.*)").unwrap();
+    let re = Regex::new(r"\.\. facet::(.*)\n(.*):name: programming_language\n.(.*):values:(.*)")
+        .unwrap();
     let r = re.find(&contents);
 
     if r.is_none() {

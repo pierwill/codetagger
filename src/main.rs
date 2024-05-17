@@ -61,14 +61,13 @@ fn main() {
         }
         let filepath = String::from(entry_path.to_string_lossy());
 
-        let (needs_tag, reason) =
-            check_needs_code_example_tag(&filepath, match_string_list.clone());
-        if needs_tag {
+        let reason = check_needs_code_example_tag(&filepath, match_string_list.clone());
+        if reason.is_some() {
             files_needing_tag_and_reason.insert(filepath.clone(), reason);
         }
 
-        let (needs_tag, reason) = check_needs_lang_metadata(&filepath);
-        if needs_tag {
+        let reason = check_needs_lang_metadata(&filepath);
+        if reason.is_some() {
             files_needing_tag_and_reason.insert(filepath.clone(), reason);
         }
     }

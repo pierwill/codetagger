@@ -11,9 +11,9 @@ use crate::types::{Language, Reason};
 use crate::CODE_TABS_STRINGS_2;
 
 // Returns true if the file needs a "code example" tag, and the Reason.
-pub fn check_needs_code_example_tag(path: &str, strings: Vec<String>) -> (bool, Option<Reason>) {
+pub fn check_needs_code_example_tag(path: &str, strings: Vec<String>) -> Option<Reason> {
     if path.contains("/includes/") {
-        return (false, None);
+        return None;
     }
 
     let lines = read_lines(path);
@@ -21,16 +21,16 @@ pub fn check_needs_code_example_tag(path: &str, strings: Vec<String>) -> (bool, 
     for line in &lines {
         for item in &strings {
             if line.contains(item) {
-                return (true, Some(Reason::CodeExample(item.to_string())));
+                return Some(Reason::CodeExample(item.to_string()));
             }
         }
     }
 
-    (false, None)
+    None
 }
 
 // Returns true if the file needs a language facet, and the Reason.
-pub fn check_needs_lang_metadata(path: &str) -> (bool, Option<Reason>) {
+pub fn check_needs_lang_metadata(path: &str) -> Option<Reason> {
     // TODO Handle includes
     // if path.contains("/includes/") {
     //     return (false, None);
@@ -54,9 +54,9 @@ pub fn check_needs_lang_metadata(path: &str) -> (bool, Option<Reason>) {
     }
 
     if langs_on_page.is_empty() {
-        (false, None)
+        None
     } else {
-        (true, Some(Reason::Languages(langs_on_page)))
+        Some(Reason::Languages(langs_on_page))
     }
 }
 

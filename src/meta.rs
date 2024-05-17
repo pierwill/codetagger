@@ -31,11 +31,6 @@ pub fn check_needs_code_example_tag(path: &str, strings: Vec<String>) -> Option<
 
 // Returns true if the file needs a language facet, and the Reason.
 pub fn check_needs_lang_metadata(path: &str) -> Option<Reason> {
-    // TODO Handle includes
-    // if path.contains("/includes/") {
-    //     return (false, None);
-    // }
-
     let lines = read_lines(path);
 
     let mut langs_on_page: BTreeSet<Language> = BTreeSet::new();
@@ -77,6 +72,7 @@ pub fn get_pl_facet_values(path: &str) -> Option<BTreeSet<Language>> {
         .unwrap();
     let r = re.find(&contents);
 
+    #[allow(clippy::question_mark)]
     if r.is_none() {
         return None;
     }

@@ -109,19 +109,19 @@ fn main() {
     for (file, reason) in &files_needing_tag_and_reason {
         let existing_facet_values: Option<_> = get_pl_facet_values(file);
 
-        // TODO For now, skip the case where there's already a facet
-        // (Can we just clobber the facet? I think so!)
-        if existing_facet_values.is_some() {
-            if args.verbose {
-                println!("💁 {file} already has PL facet");
-            }
-            rm_pl_facet(file, dryrun);
-        }
-
         let langs = match reason.clone().unwrap() {
             Reason::CodeExample(_) => continue, // actually this case can't happen?
             Reason::Languages(l) => l,
         };
+
+        if existing_facet_values.is_some() {
+            if args.verbose {
+                println!("💁 {file} already has PL facet");
+            }
+            if !langs.is_empty() {
+                rm_pl_facet(file, dryrun);
+            }
+        }
 
         // let mut already_edited: BTreeSet<String> = BTreeSet::default();
         if !file.contains("/includes/") {

@@ -83,6 +83,7 @@ fn main() {
     // For all files needing tagging,
     // add `code example` to meta keywords
     println!("📝 Tagging for \"code example\" ...");
+    #[allow(clippy::for_kv_map)]
     for (file, _reason) in &files_needing_tag_and_reason {
         let meta_keywords: Option<String> = get_meta_keywords(file);
         let has_meta_keywords: bool = meta_keywords.is_some();
@@ -93,7 +94,7 @@ fn main() {
                 println!("💁 {file} already has code-example tag");
             }
             continue;
-        } else {
+        } else if !file.contains("/includes/") {
             add_to_meta_keywords(file, dryrun)
         }
 
@@ -105,6 +106,7 @@ fn main() {
     }
 
     println!("📝 Tagging for programming language facets ...");
+    let mut already_edited: BTreeSet<String> = BTreeSet::default();
     for (file, reason) in &files_needing_tag_and_reason {
         let existing_facet_values: Option<_> = get_pl_facet_values(file);
 
@@ -122,20 +124,20 @@ fn main() {
             }
         }
 
-        // let mut already_edited: BTreeSet<String> = BTreeSet::default();
         if !file.contains("/includes/") {
             add_pl_facet(file, dryrun, langs.clone());
-            // _ = already_edited.insert(file.to_string());
+            already_edited.insert(file.to_string());
         }
 
-        // let files_that_include_this_file =
-        //     get_files_that_include_this_file(file.clone(), repo.clone(), args.verbose);
+        let files_that_include_this_file =
+            get_files_that_include_this_file(file.clone(), repo.clone(), args.verbose);
 
-        // for file in files_that_include_this_file {
-        //     if !already_edited.contains(&file) {
-        //         add_pl_facet(&file, dryrun, langs.clone());
-        //     }
-        // }
+        for file in files_that_include_this_file {
+            if !already_edited.contains(&file) && !file.contains("/includes/") {
+                add_pl_facet(&file, dryrun, langs.clone());
+                already_edited.insert(file.to_string());
+            }
+        }
     }
 
     if dryrun {
@@ -146,12 +148,12 @@ fn main() {
     }
 }
 
-#[allow(dead_code)]
+#[allow(unused_must_use)]
 fn get_files_that_include_this_file(path: String, repo: String, verbose: bool) -> BTreeSet<String> {
     let mut files_that_include_this_file: BTreeSet<String> = BTreeSet::default();
     let include_path = path.split("/source/").collect::<Vec<_>>()[1];
 
-    for entry in WalkDir::new(repo) {
+    for entry in WalkDir::new(repo.clone()) {
         let entry = entry.unwrap();
         let entry_path = entry.path();
         if entry_path.is_dir() {
@@ -165,22 +167,25 @@ fn get_files_that_include_this_file(path: String, repo: String, verbose: bool) -
         let lines = read_lines(&filepath);
         for line in lines {
             if line.contains(include_path) {
-                _ = files_that_include_this_file.insert(filepath.clone());
+                files_that_include_this_file.insert(filepath.clone());
             }
         }
     }
 
-    if verbose {
-        println!(
-            "file {} is included by {:#?}",
-            path, files_that_include_this_file
-        );
-
-        // Log nested includes
-        for f in &files_that_include_this_file {
-            if f.contains("/includes/") {
-                println!("{} is included in an include!", f);
-            }
+    for f in &files_that_include_this_file {
+        if f.contains("/includes/") {
+            println!(
+                "{} is included in an include! we will now do recursion",
+                rel_path(f.to_string())
+            );
+            files_that_include_this_file
+                .intersection(&get_files_that_include_this_file(
+                    f.to_string(),
+                    repo.clone(),
+                    verbose,
+                ))
+                .cloned()
+                .collect::<BTreeSet<_>>();
         }
     }
 
@@ -193,7 +198,7 @@ fn get_includes_with_code_tabs(repo: String) -> Vec<String> {
     let mut includes_with_code_tabs: Vec<String> = vec![];
 
     for entry in WalkDir::new(repo + "source/includes") {
-        let entry = entry.expect("Oops. Problem openning repo. Did you forget a trailing slash?");
+        let entry = entry.expect("Oops. Problem opening repo. Did you forget a trailing slash?");
         let entry_path = entry.path();
         if entry_path.is_dir() {
             continue;
@@ -206,10 +211,14 @@ fn get_includes_with_code_tabs(repo: String) -> Vec<String> {
                 includes_with_code_tabs
                     // We only want the part of the path starting with "/includes/",
                     // so split at "source".
-                    .push(filepath.split("/source/").collect::<Vec<_>>()[1].to_string());
+                    .push(rel_path(filepath));
                 break;
             }
         }
     }
     includes_with_code_tabs
+}
+
+fn rel_path(path: String) -> String {
+    path.split("/source/").collect::<Vec<_>>()[1].to_string()
 }

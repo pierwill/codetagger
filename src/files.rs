@@ -7,7 +7,21 @@ use regex::Regex;
 
 use crate::types::Language;
 
+// This is a simple macro named `say_hello`.
+macro_rules! dont_edit_includes_direct {
+    ($path:expr) => {
+        // The macro will expand into the contents of this block.
+        assert!(
+            !$path.contains("/includes/"),
+            "We don't want to directly edit any files in `/includes/`.\nTried to edit {}.",
+            $path
+        )
+    };
+}
+
 pub fn add_to_meta_keywords(path: &str, dryrun: bool) {
+    dont_edit_includes_direct!(path);
+
     let contents = read_to_string(path).expect("oops");
 
     let re = Regex::new(r"(.*):keywords:(.*)").unwrap();
@@ -30,6 +44,8 @@ pub fn add_to_meta_keywords(path: &str, dryrun: bool) {
 }
 
 pub fn add_meta_keywords(path: &str, dryrun: bool) {
+    dont_edit_includes_direct!(path);
+
     let mut contents = read_to_string(path).expect("oops");
     contents.insert_str(0, ".. meta::\n   :keywords: code example\n\n");
     if !dryrun {
@@ -39,6 +55,8 @@ pub fn add_meta_keywords(path: &str, dryrun: bool) {
 }
 
 pub fn add_pl_facet(path: &str, dryrun: bool, langs: BTreeSet<Language>) {
+    dont_edit_includes_direct!(path);
+
     let mut facet = String::from(".. facet::\n   :name: programming_language\n   :values: ");
     for lang in langs {
         facet += &lang.to_string();
@@ -58,6 +76,8 @@ pub fn add_pl_facet(path: &str, dryrun: bool, langs: BTreeSet<Language>) {
 }
 
 pub fn rm_pl_facet(path: &str, dryrun: bool) {
+    dont_edit_includes_direct!(path);
+
     let contents = read_to_string(path).expect("oops");
     let re = Regex::new(
         r"\.\. facet::(.*)\n(.*):name: programming_language(.*)\n.(.*):values:(.*)(\n*)",

@@ -15,7 +15,7 @@ pub fn get_files_that_include_this_file(
     verbose: bool,
 ) -> BTreeSet<String> {
     let mut files_that_include_this_file: BTreeSet<String> = BTreeSet::default();
-    let include_path = path.split("/source/").collect::<Vec<_>>()[1];
+    let include_path = rel_path(path);
 
     for entry in WalkDir::new(repo.clone()) {
         let entry = entry.unwrap();
@@ -23,35 +23,37 @@ pub fn get_files_that_include_this_file(
         if entry_path.is_dir() {
             continue;
         }
-        let filepath = String::from(entry_path.to_string_lossy());
-        if !filepath.contains("/source/") {
+        let filepath_being_examined = String::from(entry_path.to_string_lossy());
+        if !filepath_being_examined.contains("/source/") {
             continue;
         }
 
-        let lines = read_lines(&filepath);
+        let lines = read_lines(&filepath_being_examined);
         for line in lines {
-            if line.contains(include_path) {
-                files_that_include_this_file.insert(filepath.clone());
+            if line.contains(&include_path) {
+                files_that_include_this_file.insert(filepath_being_examined.clone());
             }
         }
     }
 
-    for f in &files_that_include_this_file {
-        if f.contains("/includes/") {
-            println!(
-                "{} is included in an include! we will now do recursion",
-                rel_path(f.to_string())
-            );
-            files_that_include_this_file
-                .intersection(&get_files_that_include_this_file(
-                    f.to_string(),
-                    repo.clone(),
-                    verbose,
-                ))
-                .cloned()
-                .collect::<BTreeSet<_>>();
-        }
+    if verbose && !files_that_include_this_file.is_empty() {
+        println!(
+            "file {} is included by {:#?}",
+            include_path, files_that_include_this_file
+        );
     }
+
+    // TODO we're not really handling nested includes yet...
+    // for f in &files_that_include_this_file {
+    //     if f.contains("/includes/") {
+    //         println!(
+    //             "Therefore, {} is included in an include! we will now do recursion",
+    //             rel_path(f.to_string())
+    //         );
+
+    //         return get_files_that_include_this_file(f.to_string(), repo.clone(), verbose);
+    //     }
+    // }
 
     files_that_include_this_file
 }

@@ -72,6 +72,11 @@ fn main() {
         if reason.is_some() {
             files_needing_tag_and_reason.insert(filepath.clone(), reason);
         }
+
+        let reason = check_needs_nodejs_tag(&filepath);
+        if reason.is_some() {
+            files_needing_tag_and_reason.insert(filepath.clone(), reason);
+        }
     }
 
     if args.verbose {

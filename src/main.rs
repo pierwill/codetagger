@@ -13,7 +13,7 @@ mod types;
 use crate::files::*;
 use crate::includes::*;
 use crate::meta::*;
-use crate::types::Reason;
+use crate::types::{Language, Reason};
 
 const CODE_TABS_STRINGS_1: &str = "tabs-selector:: drivers";
 const CODE_TABS_STRINGS_2: &str = "tabs-drivers::";
@@ -41,7 +41,12 @@ fn main() {
     let dryrun = args.dryrun;
     let repo = args.repo;
 
-    let mut files_needing_tag_and_reason: BTreeMap<String, Option<Reason>> = BTreeMap::default();
+    let mut files_needing_code_example_tag_and_reason: BTreeMap<String, Option<Reason>> =
+        BTreeMap::default();
+    let mut files_needing_node_js_tag_and_reason: BTreeMap<String, Option<Reason>> =
+        BTreeMap::default();
+    let mut files_needing_pl_facet_and_reason: BTreeMap<String, Option<Reason>> =
+        BTreeMap::default();
 
     let mut match_string_list: Vec<String> = vec![];
     let mut includes_with_code_tabs: Vec<String> = get_includes_with_code_tabs(repo.clone());
@@ -66,33 +71,30 @@ fn main() {
 
         let reason = check_needs_code_example_tag(&filepath, match_string_list.clone());
         if reason.is_some() {
-            files_needing_tag_and_reason.insert(filepath.clone(), reason);
+            files_needing_code_example_tag_and_reason.insert(filepath.clone(), reason);
         }
 
         let reason = check_needs_lang_metadata(&filepath);
         if reason.is_some() {
-            files_needing_tag_and_reason.insert(filepath.clone(), reason);
+            files_needing_pl_facet_and_reason.insert(filepath.clone(), reason);
         }
 
         let reason = check_needs_nodejs_tag(&filepath);
         if reason.is_some() {
-            files_needing_tag_and_reason.insert(filepath.clone(), reason);
+            files_needing_node_js_tag_and_reason.insert(filepath.clone(), reason);
         }
     }
 
     if args.verbose {
-        println!(
-            "Found {} files:\n{:#?}",
-            files_needing_tag_and_reason.len(),
-            files_needing_tag_and_reason,
-        );
+        dbg!(&files_needing_code_example_tag_and_reason);
+        dbg!(&files_needing_pl_facet_and_reason);
+        dbg!(&files_needing_node_js_tag_and_reason);
     }
-
     // For all files needing tagging,
     // add `code example` to meta keywords
     println!("📝 Tagging for \"code example\" ...");
     #[allow(clippy::for_kv_map)]
-    for (file, _reason) in &files_needing_tag_and_reason {
+    for (file, _reason) in &files_needing_code_example_tag_and_reason {
         let meta_keywords: Option<String> = get_meta_keywords(file);
         let has_meta_keywords: bool = meta_keywords.is_some();
 
@@ -116,11 +118,10 @@ fn main() {
 
     println!("📝 Tagging for programming language facets ...");
     let mut already_edited: BTreeSet<String> = BTreeSet::default();
-    for (file, reason) in &files_needing_tag_and_reason {
-        let existing_facet_values: Option<_> = get_pl_facet_values(file);
+    for (file, reason) in &files_needing_pl_facet_and_reason {
+        let existing_facet_values: Option<BTreeSet<Language>> = get_pl_facet_values(file);
 
         if let Some(Reason::Languages(langs)) = reason {
-            dbg!(langs);
             if existing_facet_values.is_some() {
                 if args.verbose {
                     println!("💁 {file} already has PL facet");
@@ -144,6 +145,28 @@ fn main() {
                     already_edited.insert(file.to_string());
                 }
             }
+        }
+    }
+
+    // For all files needing tagging,
+    // add `code example` to meta keywords
+    println!("📝 Tagging for \"nodejs\" ...");
+    #[allow(clippy::for_kv_map)]
+    for (file, _reason) in &files_needing_node_js_tag_and_reason {
+        let meta_keywords: Option<String> = get_meta_keywords(file);
+        let has_meta_keywords: bool = meta_keywords.is_some();
+
+        if has_meta_keywords && meta_keywords.unwrap().contains("nodejs") {
+            // File has already has `code example` in meta keywords
+            continue;
+        } else if !file.contains("/includes/") {
+            add_to_meta_keywords(file, "nodejs", dryrun)
+        }
+
+        // File doesn't have any meta keywords.
+        // Add them! (But skip includes.)
+        if !has_meta_keywords && !file.contains("/includes/") {
+            add_meta_keywords(file, dryrun);
         }
     }
 

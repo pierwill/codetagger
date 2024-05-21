@@ -100,9 +100,10 @@ fn main() {
             if args.verbose {
                 println!("💁 {file} already has code-example tag");
             }
+
             continue;
         } else if !file.contains("/includes/") {
-            add_to_meta_keywords(file, dryrun)
+            add_to_meta_keywords(file, "code example", dryrun)
         }
 
         // File doesn't have any meta keywords.

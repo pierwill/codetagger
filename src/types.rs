@@ -52,6 +52,8 @@ impl FromStr for Language {
             "python" => Ok(Self::Python),
             "ruby" => Ok(Self::Ruby),
             "rust" => Ok(Self::Rust),
+            "rust-async" => Ok(Self::Rust),
+            "rust-sync" => Ok(Self::Rust),
             "scala" => Ok(Self::Scala),
             "shell" => Ok(Self::Shell),
             "swift-sync" => Ok(Self::Swift),

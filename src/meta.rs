@@ -29,7 +29,6 @@ pub fn check_needs_code_example_tag(path: &str, strings: Vec<String>) -> Option<
     None
 }
 
-// Returns true if the file needs a language facet, and the Reason.
 pub fn check_needs_lang_metadata(path: &str) -> Option<Reason> {
     let lines = read_lines(path);
 
@@ -53,6 +52,12 @@ pub fn check_needs_lang_metadata(path: &str) -> Option<Reason> {
     } else {
         Some(Reason::Languages(langs_on_page))
     }
+}
+
+pub fn check_needs_nodejs_tag(path: &str) -> bool {
+    let lines = read_lines(path);
+    let tabids: Vec<String> = get_tabids(&lines);
+    tabids.contains(&String::from("nodejs"))
 }
 
 pub fn get_meta_keywords(path: &str) -> Option<String> {

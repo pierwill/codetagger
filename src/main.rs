@@ -42,6 +42,7 @@ fn main() {
     let repo = args.repo;
 
     let mut files_needing_tag_and_reason: BTreeMap<String, Option<Reason>> = BTreeMap::default();
+
     let mut match_string_list: Vec<String> = vec![];
     let mut includes_with_code_tabs: Vec<String> = get_includes_with_code_tabs(repo.clone());
     match_string_list.append(&mut includes_with_code_tabs);
@@ -118,32 +119,30 @@ fn main() {
     for (file, reason) in &files_needing_tag_and_reason {
         let existing_facet_values: Option<_> = get_pl_facet_values(file);
 
-        let langs = match reason.clone().unwrap() {
-            Reason::CodeExample(_) => continue, // actually this case can't happen?
-            Reason::Languages(l) => l,
-        };
-
-        if existing_facet_values.is_some() {
-            if args.verbose {
-                println!("💁 {file} already has PL facet");
+        if let Some(Reason::Languages(langs)) = reason {
+            dbg!(langs);
+            if existing_facet_values.is_some() {
+                if args.verbose {
+                    println!("💁 {file} already has PL facet");
+                }
+                if !langs.is_empty() {
+                    rm_pl_facet(file, dryrun);
+                }
             }
-            if !langs.is_empty() {
-                rm_pl_facet(file, dryrun);
-            }
-        }
 
-        if !file.contains("/includes/") {
-            add_pl_facet(file, dryrun, langs.clone());
-            already_edited.insert(file.to_string());
-        }
-
-        let files_that_include_this_file =
-            get_files_that_include_this_file(file.clone(), repo.clone(), args.verbose);
-
-        for file in files_that_include_this_file {
-            if !already_edited.contains(&file) && !file.contains("/includes/") {
-                add_pl_facet(&file, dryrun, langs.clone());
+            if !file.contains("/includes/") {
+                add_pl_facet(file, dryrun, langs.clone());
                 already_edited.insert(file.to_string());
+            }
+
+            let files_that_include_this_file =
+                get_files_that_include_this_file(file.clone(), repo.clone(), args.verbose);
+
+            for file in files_that_include_this_file {
+                if !already_edited.contains(&file) && !file.contains("/includes/") {
+                    add_pl_facet(&file, dryrun, langs.clone());
+                    already_edited.insert(file.to_string());
+                }
             }
         }
     }

@@ -54,10 +54,14 @@ pub fn check_needs_lang_metadata(path: &str) -> Option<Reason> {
     }
 }
 
-pub fn check_needs_nodejs_tag(path: &str) -> bool {
+pub fn check_needs_nodejs_tag(path: &str) -> Option<Reason> {
     let lines = read_lines(path);
     let tabids: Vec<String> = get_tabids(&lines);
-    tabids.contains(&String::from("nodejs"))
+    if tabids.contains(&String::from("nodejs")) {
+        return Some(Reason::NodejsTab);
+    } else {
+        return None;
+    }
 }
 
 pub fn get_meta_keywords(path: &str) -> Option<String> {

@@ -3,6 +3,7 @@
 use std::collections::BTreeSet;
 use std::fs::read_to_string;
 
+use itertools::Itertools;
 use regex::Regex;
 
 use crate::types::Language;
@@ -58,12 +59,7 @@ pub fn add_pl_facet(path: &str, dryrun: bool, langs: BTreeSet<Language>) {
     dont_edit_includes_direct!(path);
 
     let mut facet = String::from(".. facet::\n   :name: programming_language\n   :values: ");
-    for lang in langs {
-        facet += &lang.to_string();
-        facet += ", ";
-    }
-    facet.pop(); // remove trailing whitespace
-    facet.pop(); // remove trailing comma
+    facet += &format!("{}", langs.iter().format(", "));
     facet += "\n\n";
 
     let mut contents = read_to_string(path).expect("oops");

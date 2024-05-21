@@ -8,7 +8,6 @@ use regex::Regex;
 
 use crate::types::Language;
 
-// This is a simple macro named `say_hello`.
 macro_rules! dont_edit_includes_direct {
     ($path:expr) => {
         // The macro will expand into the contents of this block.
@@ -20,7 +19,7 @@ macro_rules! dont_edit_includes_direct {
     };
 }
 
-pub fn add_to_meta_keywords(path: &str, dryrun: bool) {
+pub fn add_to_meta_keywords(path: &str, keyword: &str, dryrun: bool) {
     dont_edit_includes_direct!(path);
 
     let contents = read_to_string(path).expect("oops");
@@ -35,7 +34,7 @@ pub fn add_to_meta_keywords(path: &str, dryrun: bool) {
         // According to the regex crate docs, "To write a literal $ use $$"
         // (https://docs.rs/regex/1.10.4/regex/struct.Regex.html#replacement-string-syntax).
         let rmatch = rmatch.replace('$', "$$");
-        let newstring = rmatch + ", code example";
+        let newstring = rmatch + ", " + keyword;
         let newcontents: String = re.replace(&contents, newstring).to_string();
         if !dryrun {
             std::fs::write(path, newcontents).expect("Unable to write file");

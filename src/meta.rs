@@ -87,7 +87,6 @@ pub fn get_meta_keywords(path: &str) -> Option<Vec<String>> {
             for item in s.split(",").map(|s| s.trim()) {
                 keywords.push(item.to_string())
             }
-            dbg!(&keywords);
             return Some(keywords);
         }
     }

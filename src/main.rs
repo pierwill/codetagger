@@ -164,7 +164,7 @@ fn main() {
         let has_meta_keywords: bool = meta_keywords.is_some();
         dbg!(&meta_keywords);
 
-        if has_meta_keywords && meta_keywords.unwrap().contains(&"code example".to_string()) {
+        if has_meta_keywords && meta_keywords.unwrap().contains(&"nodejs".to_string()) {
             // File has already has `code example` in meta keywords
             continue;
         } else if !file.contains("/includes/") {
@@ -184,11 +184,7 @@ fn main() {
         let meta_keywords: Option<Vec<String>> = get_meta_keywords(file);
         let has_meta_keywords: bool = meta_keywords.is_some();
 
-        if has_meta_keywords
-            && meta_keywords
-                .unwrap()
-                .contains(&String::from("code example"))
-        {
+        if has_meta_keywords && meta_keywords.unwrap().contains(&String::from("compass")) {
             continue;
         } else if !file.contains("/includes/") {
             add_to_meta_keywords(file, "compass", dryrun)

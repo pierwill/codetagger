@@ -74,11 +74,21 @@ pub fn check_needs_compass_tag(path: &str) -> Option<Reason> {
     }
 }
 
-pub fn get_meta_keywords(path: &str) -> Option<String> {
+pub fn get_meta_keywords(path: &str) -> Option<Vec<String>> {
+    let mut keywords: Vec<String> = vec![];
     let lines = read_lines(path);
     for line in lines.iter() {
-        if line.contains(":keywords: ") {
-            return Some(line.to_string());
+        if line.contains(":keywords:") {
+            let mut s = line.clone();
+            let s = s.trim_start();
+            let s = s.trim_start_matches(":keywords:");
+            let s = s.trim_start();
+
+            for item in s.split(",").map(|s| s.trim()) {
+                keywords.push(item.to_string())
+            }
+            dbg!(&keywords);
+            return Some(keywords);
         }
     }
     None
@@ -124,6 +134,5 @@ pub fn get_tabids(lines: &[String]) -> Vec<String> {
         }
     }
 
-    dbg!(&tabids);
     tabids
 }

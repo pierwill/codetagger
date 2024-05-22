@@ -87,20 +87,25 @@ fn main() {
         }
     }
 
-    if args.verbose {
-        dbg!(&files_needing_code_example_tag_and_reason);
-        dbg!(&files_needing_pl_facet_and_reason);
-        dbg!(&files_needing_node_js_tag_and_reason);
-    }
+    // if args.verbose {
+    //     dbg!(&files_needing_code_example_tag_and_reason);
+    //     dbg!(&files_needing_pl_facet_and_reason);
+    //     dbg!(&files_needing_node_js_tag_and_reason);
+    // }
+
     // For all files needing tagging,
     // add `code example` to meta keywords
     println!("📝 Tagging for \"code example\" ...");
     #[allow(clippy::for_kv_map)]
     for (file, _reason) in &files_needing_code_example_tag_and_reason {
-        let meta_keywords: Option<String> = get_meta_keywords(file);
+        let meta_keywords: Option<Vec<String>> = get_meta_keywords(file);
         let has_meta_keywords: bool = meta_keywords.is_some();
 
-        if has_meta_keywords && meta_keywords.unwrap().contains("code example") {
+        if has_meta_keywords
+            && meta_keywords
+                .unwrap()
+                .contains(&String::from("code example"))
+        {
             // File has already has `code example` in meta keywords
             if args.verbose {
                 println!("💁 {file} already has code-example tag");
@@ -155,10 +160,11 @@ fn main() {
     println!("📝 Tagging for \"nodejs\" ...");
     #[allow(clippy::for_kv_map)]
     for (file, _reason) in &files_needing_node_js_tag_and_reason {
-        let meta_keywords: Option<String> = get_meta_keywords(file);
+        let meta_keywords: Option<Vec<String>> = get_meta_keywords(file);
         let has_meta_keywords: bool = meta_keywords.is_some();
+        dbg!(&meta_keywords);
 
-        if has_meta_keywords && meta_keywords.unwrap().contains("nodejs") {
+        if has_meta_keywords && meta_keywords.unwrap().contains(&"code example".to_string()) {
             // File has already has `code example` in meta keywords
             continue;
         } else if !file.contains("/includes/") {
@@ -175,10 +181,14 @@ fn main() {
     println!("📝 Tagging for \"compass\" ...");
     #[allow(clippy::for_kv_map)]
     for (file, _reason) in &files_needing_compass_tag_and_reason {
-        let meta_keywords: Option<String> = get_meta_keywords(file);
+        let meta_keywords: Option<Vec<String>> = get_meta_keywords(file);
         let has_meta_keywords: bool = meta_keywords.is_some();
 
-        if has_meta_keywords && meta_keywords.unwrap().contains("compass") {
+        if has_meta_keywords
+            && meta_keywords
+                .unwrap()
+                .contains(&String::from("code example"))
+        {
             continue;
         } else if !file.contains("/includes/") {
             add_to_meta_keywords(file, "compass", dryrun)

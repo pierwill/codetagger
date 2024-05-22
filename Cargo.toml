@@ -16,3 +16,7 @@ walkdir = "2.5.0"
 [lib]
 name = "codetagger"
 path = "src/lib.rs"
+
+[[bin]]
+name = "taxer"
+path = "src/taxer.rs"

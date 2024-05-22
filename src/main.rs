@@ -1,5 +1,5 @@
-use std::collections::BTreeMap;
 use std::collections::BTreeSet;
+use std::collections::HashSet;
 
 use ansi_term::Colour::White;
 use clap::{ArgAction, Parser};
@@ -30,20 +30,16 @@ struct Args {
     verbose: bool,
 }
 
+#[derive(Debug, PartialOrd, Ord, PartialEq, Eq, Hash)]
+struct FileAndReason(String, Option<Reason>);
+
 fn main() {
     let args = Args::parse();
     let _debug = false;
     let dryrun = args.dryrun;
     let repo = args.repo;
 
-    let mut files_needing_code_example_tag_and_reason: BTreeMap<String, Option<Reason>> =
-        BTreeMap::default();
-    let mut files_needing_node_js_tag_and_reason: BTreeMap<String, Option<Reason>> =
-        BTreeMap::default();
-    let mut files_needing_compass_tag_and_reason: BTreeMap<String, Option<Reason>> =
-        BTreeMap::default();
-    let mut files_needing_pl_facet_and_reason: BTreeMap<String, Option<Reason>> =
-        BTreeMap::default();
+    let mut files_needing_tag_and_reason: HashSet<FileAndReason> = HashSet::default();
 
     let mut match_string_list: Vec<String> = vec![];
     let mut includes_with_code_tabs: Vec<String> = get_includes_with_code_tabs(repo.clone());
@@ -68,22 +64,22 @@ fn main() {
 
         let reason = check_needs_code_example_tag(&filepath, match_string_list.clone());
         if reason.is_some() {
-            files_needing_code_example_tag_and_reason.insert(filepath.clone(), reason);
+            files_needing_tag_and_reason.insert(FileAndReason(filepath.clone(), reason));
         }
 
         let reason = check_needs_lang_metadata(&filepath);
         if reason.is_some() {
-            files_needing_pl_facet_and_reason.insert(filepath.clone(), reason);
+            files_needing_tag_and_reason.insert(FileAndReason(filepath.clone(), reason));
         }
 
         let reason = check_needs_nodejs_tag(&filepath);
         if reason.is_some() {
-            files_needing_node_js_tag_and_reason.insert(filepath.clone(), reason);
+            files_needing_tag_and_reason.insert(FileAndReason(filepath.clone(), reason));
         }
 
         let reason = check_needs_compass_tag(&filepath);
         if reason.is_some() {
-            files_needing_compass_tag_and_reason.insert(filepath.clone(), reason);
+            files_needing_tag_and_reason.insert(FileAndReason(filepath.clone(), reason));
         }
     }
 
@@ -97,7 +93,7 @@ fn main() {
     // add `code example` to meta keywords
     println!("📝 Tagging for \"code example\" ...");
     #[allow(clippy::for_kv_map)]
-    for (file, _reason) in &files_needing_code_example_tag_and_reason {
+    for FileAndReason(file, _reason) in &files_needing_tag_and_reason {
         let meta_keywords: Option<Vec<String>> = get_meta_keywords(file);
         let has_meta_keywords: bool = meta_keywords.is_some();
 
@@ -110,7 +106,6 @@ fn main() {
             if args.verbose {
                 println!("💁 {file} already has code-example tag");
             }
-
             continue;
         } else if !file.contains("/includes/") {
             add_to_meta_keywords(file, "code example", dryrun)
@@ -124,8 +119,8 @@ fn main() {
     }
 
     println!("📝 Tagging for programming language facets ...");
-    let mut already_edited: BTreeSet<String> = BTreeSet::default();
-    for (file, reason) in &files_needing_pl_facet_and_reason {
+    let mut already_edited: HashSet<String> = HashSet::default();
+    for FileAndReason(file, reason) in &files_needing_tag_and_reason {
         let existing_facet_values: Option<BTreeSet<Language>> = get_pl_facet_values(file);
 
         if let Some(Reason::Languages(langs)) = reason {
@@ -159,7 +154,7 @@ fn main() {
     // add `code example` to meta keywords
     println!("📝 Tagging for \"nodejs\" ...");
     #[allow(clippy::for_kv_map)]
-    for (file, _reason) in &files_needing_node_js_tag_and_reason {
+    for FileAndReason(file, _reason) in &files_needing_tag_and_reason {
         let meta_keywords: Option<Vec<String>> = get_meta_keywords(file);
         let has_meta_keywords: bool = meta_keywords.is_some();
         dbg!(&meta_keywords);
@@ -180,7 +175,7 @@ fn main() {
 
     println!("📝 Tagging for \"compass\" ...");
     #[allow(clippy::for_kv_map)]
-    for (file, _reason) in &files_needing_compass_tag_and_reason {
+    for FileAndReason(file, _reason) in &files_needing_tag_and_reason {
         let meta_keywords: Option<Vec<String>> = get_meta_keywords(file);
         let has_meta_keywords: bool = meta_keywords.is_some();
 

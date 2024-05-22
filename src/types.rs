@@ -3,7 +3,7 @@ use std::fmt::Display;
 use std::str::FromStr;
 
 // The reason a file needs tagging.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Reason {
     CodeExample(String),
     Languages(BTreeSet<Language>),

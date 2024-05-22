@@ -64,6 +64,16 @@ pub fn check_needs_nodejs_tag(path: &str) -> Option<Reason> {
     }
 }
 
+pub fn check_needs_compass_tag(path: &str) -> Option<Reason> {
+    let lines = read_lines(path);
+    let tabids: Vec<String> = get_tabids(&lines);
+    if tabids.contains(&String::from("compass")) {
+        Some(Reason::CompassTab)
+    } else {
+        None
+    }
+}
+
 pub fn get_meta_keywords(path: &str) -> Option<String> {
     let lines = read_lines(path);
     for line in lines.iter() {
@@ -113,5 +123,7 @@ pub fn get_tabids(lines: &[String]) -> Vec<String> {
             tabids.push(line.split(":tabid:").map(|s| s.trim()).collect::<Vec<_>>()[1].to_string());
         }
     }
+
+    dbg!(&tabids);
     tabids
 }

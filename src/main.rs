@@ -45,6 +45,8 @@ fn main() {
         BTreeMap::default();
     let mut files_needing_node_js_tag_and_reason: BTreeMap<String, Option<Reason>> =
         BTreeMap::default();
+    let mut files_needing_compass_tag_and_reason: BTreeMap<String, Option<Reason>> =
+        BTreeMap::default();
     let mut files_needing_pl_facet_and_reason: BTreeMap<String, Option<Reason>> =
         BTreeMap::default();
 
@@ -82,6 +84,11 @@ fn main() {
         let reason = check_needs_nodejs_tag(&filepath);
         if reason.is_some() {
             files_needing_node_js_tag_and_reason.insert(filepath.clone(), reason);
+        }
+
+        let reason = check_needs_compass_tag(&filepath);
+        if reason.is_some() {
+            files_needing_compass_tag_and_reason.insert(filepath.clone(), reason);
         }
     }
 
@@ -161,6 +168,25 @@ fn main() {
             continue;
         } else if !file.contains("/includes/") {
             add_to_meta_keywords(file, "nodejs", dryrun)
+        }
+
+        // File doesn't have any meta keywords.
+        // Add them! (But skip includes.)
+        if !has_meta_keywords && !file.contains("/includes/") {
+            add_meta_keywords(file, dryrun);
+        }
+    }
+
+    println!("📝 Tagging for \"compass\" ...");
+    #[allow(clippy::for_kv_map)]
+    for (file, _reason) in &files_needing_compass_tag_and_reason {
+        let meta_keywords: Option<String> = get_meta_keywords(file);
+        let has_meta_keywords: bool = meta_keywords.is_some();
+
+        if has_meta_keywords && meta_keywords.unwrap().contains("compass") {
+            continue;
+        } else if !file.contains("/includes/") {
+            add_to_meta_keywords(file, "compass", dryrun)
         }
 
         // File doesn't have any meta keywords.

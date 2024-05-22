@@ -8,6 +8,7 @@ pub enum Reason {
     CodeExample(String),
     Languages(BTreeSet<Language>),
     NodejsTab,
+    CompassTab,
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Clone)]

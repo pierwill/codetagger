@@ -5,15 +5,10 @@ use ansi_term::Colour::White;
 use clap::{ArgAction, Parser};
 use walkdir::WalkDir;
 
-mod files;
-mod includes;
-mod meta;
-mod types;
-
-use crate::files::*;
-use crate::includes::*;
-use crate::meta::*;
-use crate::types::{Language, Reason};
+use codetagger::files::*;
+use codetagger::includes::*;
+use codetagger::meta::*;
+use codetagger::types::{Language, Reason};
 
 const CODE_TABS_STRINGS_1: &str = "tabs-selector:: drivers";
 const CODE_TABS_STRINGS_2: &str = "tabs-drivers::";

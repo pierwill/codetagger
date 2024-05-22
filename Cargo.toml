@@ -12,3 +12,7 @@ clap-verbosity-flag = "2.2.0"
 itertools = "0.13.0"
 regex = "1.10.4"
 walkdir = "2.5.0"
+
+[lib]
+name = "codetagger"
+path = "src/lib.rs"

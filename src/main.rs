@@ -2,9 +2,10 @@ use std::collections::BTreeSet;
 use std::collections::HashSet;
 
 use ansi_term::Colour::White;
-use clap::{ArgAction, Parser};
+use clap::Parser;
 use walkdir::WalkDir;
 
+use codetagger::cli::Args;
 use codetagger::files::*;
 use codetagger::includes::*;
 use codetagger::meta::*;
@@ -12,23 +13,6 @@ use codetagger::types::{Language, Reason};
 
 const CODE_TABS_STRINGS_1: &str = "tabs-selector:: drivers";
 const CODE_TABS_STRINGS_2: &str = "tabs-drivers::";
-
-#[derive(Parser, Debug)]
-#[command(version, about, long_about = None)]
-struct Args {
-    /// In order to make changes to the files,
-    /// run `with --dryrun=false`.
-    #[clap(long, short,
-           default_missing_value("true"), default_value("true"), num_args(0..=1),
-           require_equals(true), action = ArgAction::Set)]
-    dryrun: bool,
-    /// Path to the root of the target repo.
-    #[arg(short, long)]
-    repo: String,
-    /// Print information on matches.
-    #[arg(short, long)]
-    verbose: bool,
-}
 
 #[derive(Debug, PartialOrd, Ord, PartialEq, Eq, Hash)]
 struct FileAndReason(String, Option<Reason>);

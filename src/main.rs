@@ -76,7 +76,6 @@ fn main() {
     // For all files needing tagging,
     // add `code example` to meta keywords
     println!("📝 Tagging for \"code example\" ...");
-    #[allow(clippy::for_kv_map)]
     for FileAndReason(file, _reason) in &files_needing_tag_and_reason {
         let meta_keywords: Option<Vec<String>> = get_meta_keywords(file);
         let has_meta_keywords: bool = meta_keywords.is_some();
@@ -137,7 +136,6 @@ fn main() {
     // For all files needing tagging,
     // add `code example` to meta keywords
     println!("📝 Tagging for \"nodejs\" ...");
-    #[allow(clippy::for_kv_map)]
     for FileAndReason(file, _reason) in &files_needing_tag_and_reason {
         let meta_keywords: Option<Vec<String>> = get_meta_keywords(file);
         let has_meta_keywords: bool = meta_keywords.is_some();
@@ -158,7 +156,6 @@ fn main() {
     }
 
     println!("📝 Tagging for \"compass\" ...");
-    #[allow(clippy::for_kv_map)]
     for FileAndReason(file, _reason) in &files_needing_tag_and_reason {
         let meta_keywords: Option<Vec<String>> = get_meta_keywords(file);
         let has_meta_keywords: bool = meta_keywords.is_some();

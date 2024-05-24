@@ -79,12 +79,12 @@ pub fn get_meta_keywords(path: &str) -> Option<Vec<String>> {
     let lines = read_lines(path);
     for line in lines.iter() {
         if line.contains(":keywords:") {
-            let mut s = line.clone();
+            let s = line.clone();
             let s = s.trim_start();
             let s = s.trim_start_matches(":keywords:");
             let s = s.trim_start();
 
-            for item in s.split(",").map(|s| s.trim()) {
+            for item in s.split(',').map(|s| s.trim()) {
                 keywords.push(item.to_string())
             }
             return Some(keywords);

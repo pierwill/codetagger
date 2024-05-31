@@ -14,6 +14,8 @@ use codetagger::types::{Language, Reason};
 const CODE_TABS_STRINGS_1: &str = "tabs-selector:: drivers";
 const CODE_TABS_STRINGS_2: &str = "tabs-drivers::";
 
+/// A pair of a file path and optional Reason for needed tagging.
+/// This is hashable so that we can have multiple entries per file.
 #[derive(Debug, PartialOrd, Ord, PartialEq, Eq, Hash)]
 struct FileAndReason(String, Option<Reason>);
 

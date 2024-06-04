@@ -140,11 +140,11 @@ fn main() {
         let meta_keywords: Option<Vec<String>> = get_meta_keywords(file);
         let has_meta_keywords: bool = meta_keywords.is_some();
 
-        if has_meta_keywords && meta_keywords.unwrap().contains(&"nodejs".to_string()) {
+        if has_meta_keywords && meta_keywords.unwrap().contains(&"node.js".to_string()) {
             // File has already has node in meta keywords
             continue;
         } else if !file.contains("/includes/") {
-            add_to_meta_keywords(file, "nodejs", dryrun)
+            add_to_meta_keywords(file, "node.js", dryrun)
         }
 
         // File doesn't have any meta keywords.

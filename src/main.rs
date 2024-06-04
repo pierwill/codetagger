@@ -75,8 +75,7 @@ fn main() {
     //     dbg!(&files_needing_node_js_tag_and_reason);
     // }
 
-    // For all files needing tagging,
-    // add `code example` to meta keywords
+    // Add `code example` to meta keywords
     println!("📝 Tagging for \"code example\" ...");
     for FileAndReason(file, _reason) in &files_needing_tag_and_reason {
         let meta_keywords: Option<Vec<String>> = get_meta_keywords(file);
@@ -135,16 +134,14 @@ fn main() {
         }
     }
 
-    // For all files needing tagging,
-    // add `code example` to meta keywords
+    // add `node.js` to meta keywords
     println!("📝 Tagging for \"nodejs\" ...");
     for FileAndReason(file, _reason) in &files_needing_tag_and_reason {
         let meta_keywords: Option<Vec<String>> = get_meta_keywords(file);
         let has_meta_keywords: bool = meta_keywords.is_some();
-        dbg!(&meta_keywords);
 
         if has_meta_keywords && meta_keywords.unwrap().contains(&"nodejs".to_string()) {
-            // File has already has `code example` in meta keywords
+            // File has already has node in meta keywords
             continue;
         } else if !file.contains("/includes/") {
             add_to_meta_keywords(file, "nodejs", dryrun)
@@ -157,6 +154,7 @@ fn main() {
         }
     }
 
+    // add `compass` to meta keywords
     println!("📝 Tagging for \"compass\" ...");
     for FileAndReason(file, _reason) in &files_needing_tag_and_reason {
         let meta_keywords: Option<Vec<String>> = get_meta_keywords(file);

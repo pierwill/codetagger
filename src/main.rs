@@ -75,6 +75,28 @@ fn main() {
     //     dbg!(&files_needing_node_js_tag_and_reason);
     // }
 
+    println!("📝 Tagging for programming language facets ...");
+    let mut already_edited: HashSet<String> = HashSet::default();
+    for FileAndReason(file, reason) in &files_needing_tag_and_reason {
+        if let Some(Reason::Languages(langs)) = reason {
+            if !file.contains("/includes/") {
+                rm_pl_facet(file, dryrun);
+                add_pl_facet(file, dryrun, langs.clone());
+                already_edited.insert(file.to_string());
+            }
+
+            let files_that_include_this_file =
+                get_files_that_include_this_file(file.clone(), repo.clone(), args.verbose);
+
+            for file in files_that_include_this_file {
+                if !already_edited.contains(&file) && !file.contains("/includes/") {
+                    add_pl_facet(&file, dryrun, langs.clone());
+                    already_edited.insert(file.to_string());
+                }
+            }
+        }
+    }
+
     // Add `code example` to meta keywords
     println!("📝 Tagging for \"code example\" ...");
     for FileAndReason(file, _reason) in &files_needing_tag_and_reason {
@@ -99,38 +121,6 @@ fn main() {
         // Add them! (But skip includes.)
         if !has_meta_keywords && !file.contains("/includes/") {
             add_meta_keywords(file, dryrun);
-        }
-    }
-
-    println!("📝 Tagging for programming language facets ...");
-    let mut already_edited: HashSet<String> = HashSet::default();
-    for FileAndReason(file, reason) in &files_needing_tag_and_reason {
-        let existing_facet_values: Option<BTreeSet<Language>> = get_pl_facet_values(file);
-
-        if let Some(Reason::Languages(langs)) = reason {
-            if existing_facet_values.is_some() {
-                if args.verbose {
-                    println!("💁 {file} already has PL facet");
-                }
-                if !langs.is_empty() {
-                    rm_pl_facet(file, dryrun);
-                }
-            }
-
-            if !file.contains("/includes/") {
-                add_pl_facet(file, dryrun, langs.clone());
-                already_edited.insert(file.to_string());
-            }
-
-            let files_that_include_this_file =
-                get_files_that_include_this_file(file.clone(), repo.clone(), args.verbose);
-
-            for file in files_that_include_this_file {
-                if !already_edited.contains(&file) && !file.contains("/includes/") {
-                    add_pl_facet(&file, dryrun, langs.clone());
-                    already_edited.insert(file.to_string());
-                }
-            }
         }
     }
 

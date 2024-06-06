@@ -112,69 +112,17 @@ fn main() {
         }
     }
 
-    // Add `code example` to meta keywords
-    println!("📝 Tagging for \"code example\" ...");
-    for FileAndReason(file, _reason) in &files_needing_tag_and_reason {
-        let meta_keywords: Option<Vec<String>> = get_meta_keywords(file);
-        let has_meta_keywords: bool = meta_keywords.is_some();
-
-        if has_meta_keywords
-            && meta_keywords
-                .unwrap()
-                .contains(&String::from("code example"))
-        {
-            // File has already has `code example` in meta keywords
-            if args.verbose {
-                println!("💁 {file} already has code-example tag");
+    for FileAndReason(file, reason) in &files_needing_tag_and_reason {
+        if reason.is_some() {
+            match reason.clone().unwrap() {
+                Reason::CodeExample(_) => tag_with_keyword(file, "code example", dryrun),
+                Reason::NodejsTab => tag_with_keyword(file, "node.js", dryrun),
+                Reason::CompassTab => tag_with_keyword(file, "compass", dryrun),
+                Reason::AtlasApiTab => tag_with_keyword(file, "atlasapi", dryrun),
+                Reason::AtlasCliTab => tag_with_keyword(file, "atlascli", dryrun),
+                Reason::AtlasUiTab => tag_with_keyword(file, "atlasui", dryrun),
+                Reason::Languages(_) => continue,
             }
-            continue;
-        } else if !file.contains("/includes/") {
-            add_to_meta_keywords(file, "code example", dryrun)
-        }
-
-        // File doesn't have any meta keywords.
-        // Add them! (But skip includes.)
-        if !has_meta_keywords && !file.contains("/includes/") {
-            add_meta_keywords(file, dryrun);
-        }
-    }
-
-    // add `node.js` to meta keywords
-    println!("📝 Tagging for \"nodejs\" ...");
-    for FileAndReason(file, _reason) in &files_needing_tag_and_reason {
-        let meta_keywords: Option<Vec<String>> = get_meta_keywords(file);
-        let has_meta_keywords: bool = meta_keywords.is_some();
-
-        if has_meta_keywords && meta_keywords.unwrap().contains(&"node.js".to_string()) {
-            // File has already has node in meta keywords
-            continue;
-        } else if !file.contains("/includes/") {
-            add_to_meta_keywords(file, "node.js", dryrun)
-        }
-
-        // File doesn't have any meta keywords.
-        // Add them! (But skip includes.)
-        if !has_meta_keywords && !file.contains("/includes/") {
-            add_meta_keywords(file, dryrun);
-        }
-    }
-
-    // add `compass` to meta keywords
-    println!("📝 Tagging for \"compass\" ...");
-    for FileAndReason(file, _reason) in &files_needing_tag_and_reason {
-        let meta_keywords: Option<Vec<String>> = get_meta_keywords(file);
-        let has_meta_keywords: bool = meta_keywords.is_some();
-
-        if has_meta_keywords && meta_keywords.unwrap().contains(&String::from("compass")) {
-            continue;
-        } else if !file.contains("/includes/") {
-            add_to_meta_keywords(file, "compass", dryrun)
-        }
-
-        // File doesn't have any meta keywords.
-        // Add them! (But skip includes.)
-        if !has_meta_keywords && !file.contains("/includes/") {
-            add_meta_keywords(file, dryrun);
         }
     }
 
@@ -183,5 +131,22 @@ fn main() {
             "{}",
             White.paint("\n👉 This was a dry run.\nTo update files, run with `--dryrun=false`.")
         );
+    }
+}
+
+fn tag_with_keyword(file: &str, s: &str, dryrun: bool) {
+    let meta_keywords: Option<Vec<String>> = get_meta_keywords(file);
+    let has_meta_keywords: bool = meta_keywords.is_some();
+
+    if has_meta_keywords && meta_keywords.unwrap().contains(&String::from(s)) {
+        return;
+    } else if !file.contains("/includes/") {
+        add_to_meta_keywords(file, s, dryrun)
+    }
+
+    // File doesn't have any meta keywords.
+    // Add them! (But skip includes.)
+    if !has_meta_keywords && !file.contains("/includes/") {
+        add_meta_keywords(file, dryrun);
     }
 }

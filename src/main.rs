@@ -1,4 +1,3 @@
-use std::collections::BTreeSet;
 use std::collections::HashSet;
 
 use ansi_term::Colour::White;
@@ -9,7 +8,7 @@ use codetagger::cli::Args;
 use codetagger::files::*;
 use codetagger::includes::*;
 use codetagger::meta::*;
-use codetagger::types::{Language, Reason};
+use codetagger::types::Reason;
 
 const CODE_TABS_STRINGS_1: &str = "tabs-selector:: drivers";
 const CODE_TABS_STRINGS_2: &str = "tabs-drivers::";
@@ -64,6 +63,22 @@ fn main() {
         }
 
         let reason = check_needs_compass_tag(&filepath);
+        if reason.is_some() {
+            files_needing_tag_and_reason.insert(FileAndReason(filepath.clone(), reason));
+        }
+
+        // Atlas
+        let reason = check_needs_atlas_api_tag(&filepath);
+        if reason.is_some() {
+            files_needing_tag_and_reason.insert(FileAndReason(filepath.clone(), reason));
+        }
+
+        let reason = check_needs_atlas_cli_tag(&filepath);
+        if reason.is_some() {
+            files_needing_tag_and_reason.insert(FileAndReason(filepath.clone(), reason));
+        }
+
+        let reason = check_needs_atlas_ui_tag(&filepath);
         if reason.is_some() {
             files_needing_tag_and_reason.insert(FileAndReason(filepath.clone(), reason));
         }

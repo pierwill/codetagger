@@ -9,6 +9,9 @@ pub enum Reason {
     Languages(BTreeSet<Language>),
     NodejsTab,
     CompassTab,
+    AtlasApiTab,
+    AtlasCliTab,
+    AtlasUiTab,
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Clone)]

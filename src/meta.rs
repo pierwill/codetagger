@@ -74,6 +74,36 @@ pub fn check_needs_compass_tag(path: &str) -> Option<Reason> {
     }
 }
 
+pub fn check_needs_atlas_api_tag(path: &str) -> Option<Reason> {
+    let lines = read_lines(path);
+    let tabids: Vec<String> = get_tabids(&lines);
+    if tabids.contains(&String::from("atlasapi")) || tabids.contains(&String::from("api")) {
+        Some(Reason::AtlasApiTab)
+    } else {
+        None
+    }
+}
+
+pub fn check_needs_atlas_cli_tag(path: &str) -> Option<Reason> {
+    let lines = read_lines(path);
+    let tabids: Vec<String> = get_tabids(&lines);
+    if tabids.contains(&String::from("atlascli")) && tabids.contains(&String::from("cli")) {
+        Some(Reason::AtlasCliTab)
+    } else {
+        None
+    }
+}
+
+pub fn check_needs_atlas_ui_tag(path: &str) -> Option<Reason> {
+    let lines = read_lines(path);
+    let tabids: Vec<String> = get_tabids(&lines);
+    if tabids.contains(&String::from("atlasui")) || tabids.contains(&String::from("ui")) {
+        Some(Reason::AtlasUiTab)
+    } else {
+        None
+    }
+}
+
 pub fn get_meta_keywords(path: &str) -> Option<Vec<String>> {
     let mut keywords: Vec<String> = vec![];
     let lines = read_lines(path);

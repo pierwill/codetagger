@@ -93,7 +93,6 @@ fn main() {
     for FileAndReason(file, reason) in &files_needing_tag_and_reason {
         if let Some(Reason::Languages(langs)) = reason {
             if !file.contains("/includes/") {
-                rm_pl_facet(file, dryrun);
                 add_pl_facet(file, dryrun, langs.clone());
                 already_edited.insert(file.to_string());
             }
@@ -129,6 +128,27 @@ fn main() {
             "{}",
             White.paint("\n👉 This was a dry run.\nTo update files, run with `--dryrun=false`.")
         );
+    }
+
+    // PANIC if we have two PL facets!
+    for entry in WalkDir::new(&repo) {
+        let entry = entry.unwrap();
+        let entry_path = entry.path();
+        if entry_path.is_dir() {
+            continue;
+        }
+        let filepath = String::from(entry_path.to_string_lossy());
+
+        let lines = read_lines(&filepath);
+        let mut count = 0;
+        for line in lines {
+            if line.contains("programming_language") {
+                count += 1
+            }
+            if count == 2 {
+                panic!("too many PL lines: {filepath}")
+            }
+        }
     }
 }
 

@@ -67,6 +67,13 @@ pub fn add_meta_keywords(path: &str, dryrun: bool) {
 pub fn add_pl_facet(path: &str, dryrun: bool, langs: BTreeSet<Language>) {
     dont_edit_includes_direct!(path);
 
+    // Remove any duplicates
+    let mut string = read_to_string(path).unwrap();
+    while string.contains(&String::from(":name: programming_language")) {
+        rm_pl_facet(path, dryrun);
+        string = read_to_string(path).unwrap();
+    }
+
     let mut facet = String::from(".. facet::\n   :name: programming_language\n   :values: ");
     facet += &format!("{}", langs.iter().format(", "));
     facet += "\n\n";

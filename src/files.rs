@@ -34,7 +34,17 @@ pub fn add_to_meta_keywords(path: &str, keyword: &str, dryrun: bool) {
         // According to the regex crate docs, "To write a literal $ use $$"
         // (https://docs.rs/regex/1.10.4/regex/struct.Regex.html#replacement-string-syntax).
         let rmatch = rmatch.replace('$', "$$");
-        let newstring = rmatch + ", " + keyword;
+
+        let mut needs_comma = true;
+        if rmatch.ends_with(":keywords:") {
+            needs_comma = false
+        }
+        let newstring = if needs_comma {
+            rmatch + ", " + keyword
+        } else {
+            rmatch + " " + keyword
+        };
+
         let newcontents: String = re.replace(&contents, newstring).to_string();
         if !dryrun {
             std::fs::write(path, newcontents).expect("Unable to write file");
@@ -47,7 +57,7 @@ pub fn add_meta_keywords(path: &str, dryrun: bool) {
     dont_edit_includes_direct!(path);
 
     let mut contents = read_to_string(path).expect("oops");
-    contents.insert_str(0, ".. meta::\n   :keywords: code example\n\n");
+    contents.insert_str(0, ".. meta::\n   :keywords:\n\n");
     if !dryrun {
         std::fs::write(path, contents).expect("Unable to write file");
     }

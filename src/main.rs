@@ -84,11 +84,9 @@ fn main() {
         }
     }
 
-    // if args.verbose {
-    //     dbg!(&files_needing_code_example_tag_and_reason);
-    //     dbg!(&files_needing_pl_facet_and_reason);
-    //     dbg!(&files_needing_node_js_tag_and_reason);
-    // }
+    if args.verbose {
+        dbg!(&files_needing_tag_and_reason);
+    }
 
     println!("📝 Tagging for programming language facets ...");
     let mut already_edited: HashSet<String> = HashSet::default();
@@ -136,17 +134,16 @@ fn main() {
 
 fn tag_with_keyword(file: &str, s: &str, dryrun: bool) {
     let meta_keywords: Option<Vec<String>> = get_meta_keywords(file);
-    let has_meta_keywords: bool = meta_keywords.is_some();
-
-    if has_meta_keywords && meta_keywords.unwrap().contains(&String::from(s)) {
-        return;
-    } else if !file.contains("/includes/") {
-        add_to_meta_keywords(file, s, dryrun)
-    }
 
     // File doesn't have any meta keywords.
     // Add them! (But skip includes.)
-    if !has_meta_keywords && !file.contains("/includes/") {
+    if meta_keywords.is_none() && !file.contains("/includes/") {
         add_meta_keywords(file, dryrun);
+    }
+
+    if meta_keywords.is_some() && meta_keywords.unwrap().contains(&String::from(s)) {
+        return;
+    } else if !file.contains("/includes/") {
+        add_to_meta_keywords(file, s, dryrun)
     }
 }

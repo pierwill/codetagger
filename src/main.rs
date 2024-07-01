@@ -62,6 +62,11 @@ fn main() {
             files_needing_tag_and_reason.insert(FileAndReason(filepath.clone(), reason));
         }
 
+        let reason = check_needs_java_tag(&filepath);
+        if reason.is_some() {
+            files_needing_tag_and_reason.insert(FileAndReason(filepath.clone(), reason));
+        }
+
         let reason = check_needs_compass_tag(&filepath);
         if reason.is_some() {
             files_needing_tag_and_reason.insert(FileAndReason(filepath.clone(), reason));
@@ -118,6 +123,7 @@ fn main() {
                 Reason::AtlasApiTab => tag_with_keyword(file, "atlas api", dryrun),
                 Reason::AtlasCliTab => tag_with_keyword(file, "atlas cli", dryrun),
                 Reason::AtlasUiTab => tag_with_keyword(file, "atlas ui", dryrun),
+                Reason::Java(syncness) => tag_with_keyword(file, &syncness, dryrun),
                 Reason::Languages(_) => continue,
             }
         }

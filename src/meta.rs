@@ -64,6 +64,21 @@ pub fn check_needs_nodejs_tag(path: &str) -> Option<Reason> {
     }
 }
 
+pub fn check_needs_java_tag(path: &str) -> Option<Reason> {
+    let sync = String::from("java-sync");
+    let _async = String::from("java-async");
+
+    let lines = read_lines(path);
+    let tabids: Vec<String> = get_tabids(&lines);
+
+    match (tabids.contains(&sync), tabids.contains(&_async)) {
+        (true, true) => return Some(Reason::Java("java sync, java async".to_string())),
+        (true, false) => return Some(Reason::Java("java sync".to_string())),
+        (false, true) => return Some(Reason::Java("java async".to_string())),
+        (false, false) => return None,
+    }
+}
+
 pub fn check_needs_compass_tag(path: &str) -> Option<Reason> {
     let lines = read_lines(path);
     let tabids: Vec<String> = get_tabids(&lines);

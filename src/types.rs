@@ -12,6 +12,7 @@ pub enum Reason {
     AtlasApiTab,
     AtlasCliTab,
     AtlasUiTab,
+    Java(String),
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Clone)]

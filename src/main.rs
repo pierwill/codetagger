@@ -115,9 +115,9 @@ fn main() {
                 Reason::CodeExample(_) => tag_with_keyword(file, "code example", dryrun),
                 Reason::NodejsTab => tag_with_keyword(file, "node.js", dryrun),
                 Reason::CompassTab => tag_with_keyword(file, "compass", dryrun),
-                Reason::AtlasApiTab => tag_with_keyword(file, "atlasapi", dryrun),
-                Reason::AtlasCliTab => tag_with_keyword(file, "atlascli", dryrun),
-                Reason::AtlasUiTab => tag_with_keyword(file, "atlasui", dryrun),
+                Reason::AtlasApiTab => tag_with_keyword(file, "atlas api", dryrun),
+                Reason::AtlasCliTab => tag_with_keyword(file, "atlas cli", dryrun),
+                Reason::AtlasUiTab => tag_with_keyword(file, "atlas ui", dryrun),
                 Reason::Languages(_) => continue,
             }
         }

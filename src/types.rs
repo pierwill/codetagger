@@ -12,8 +12,28 @@ pub enum Reason {
     AtlasApiTab,
     AtlasCliTab,
     AtlasUiTab,
-    Java(String),
+    Java(JavaSyncness),
 }
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum JavaSyncness {
+    Sync,
+    Async,
+    Both,
+}
+
+// impl FromStr for JavaSyncness {
+//     type Err = ParseSyncnessError;
+
+//     fn from_str(s: &str) -> Result<Self, Self::Err> {
+//         match s {
+//             "java sync" => Ok(JavaSyncness::Sync),
+//             "java async" => Ok(JavaSyncness::Async),
+//             "java sync, java async" => Ok(JavaSyncness::Both),
+//             _ => Err(ParseSyncnessError),
+//         }
+//     }
+// }
 
 #[derive(Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Clone)]
 pub enum Language {

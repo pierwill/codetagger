@@ -2,6 +2,7 @@ use std::collections::HashSet;
 
 use ansi_term::Colour::White;
 use clap::Parser;
+use codetagger::types::JavaSyncness;
 use walkdir::WalkDir;
 
 use codetagger::cli::Args;
@@ -123,7 +124,12 @@ fn main() {
                 Reason::AtlasApiTab => tag_with_keyword(file, "atlas api", dryrun),
                 Reason::AtlasCliTab => tag_with_keyword(file, "atlas cli", dryrun),
                 Reason::AtlasUiTab => tag_with_keyword(file, "atlas ui", dryrun),
-                Reason::Java(syncness) => tag_with_keyword(file, &syncness, dryrun),
+                Reason::Java(JavaSyncness::Both) => {
+                    tag_with_keyword(file, "java async", dryrun);
+                    tag_with_keyword(file, "java sync", dryrun);
+                }
+                Reason::Java(JavaSyncness::Async) => tag_with_keyword(file, "java async", dryrun),
+                Reason::Java(JavaSyncness::Sync) => tag_with_keyword(file, "java sync", dryrun),
                 Reason::Languages(_) => continue,
             }
         }

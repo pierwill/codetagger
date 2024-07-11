@@ -7,7 +7,7 @@ use std::str::FromStr;
 use regex::Regex;
 
 use crate::files::read_lines;
-use crate::types::{Language, Reason};
+use crate::types::{JavaSyncness, Language, Reason};
 use crate::CODE_TABS_STRINGS_2;
 
 // Returns true if the file needs a "code example" tag, and the Reason.
@@ -72,9 +72,9 @@ pub fn check_needs_java_tag(path: &str) -> Option<Reason> {
     let tabids: Vec<String> = get_tabids(&lines);
 
     match (tabids.contains(&sync), tabids.contains(&_async)) {
-        (true, true) => return Some(Reason::Java("java sync, java async".to_string())),
-        (true, false) => return Some(Reason::Java("java sync".to_string())),
-        (false, true) => return Some(Reason::Java("java async".to_string())),
+        (true, true) => return Some(Reason::Java(JavaSyncness::Both)),
+        (true, false) => return Some(Reason::Java(JavaSyncness::Sync)),
+        (false, true) => return Some(Reason::Java(JavaSyncness::Async)),
         (false, false) => return None,
     }
 }
